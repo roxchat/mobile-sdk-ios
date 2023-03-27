@@ -80,6 +80,7 @@
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACD81AFB9204008FA782 /* WMStartViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD71AFB9204008FA782 /* WMStartViewController.swift */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
+		7F94A9A4866A43B19E0F9864 /* Pods_RoxchatClientLibrary_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 10D72720E6E16B68039680FC /* Pods_RoxchatClientLibrary_Example.framework */; };
 		900337D527D8A3FE000EFBEC /* UIActivityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 900337D427D8A3FE000EFBEC /* UIActivityType.swift */; };
 		90038C8E279623B7000267B9 /* WMToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90038C7E279623B6000267B9 /* WMToolbarView.swift */; };
 		90038C8F279623B7000267B9 /* WMToolbarBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90038C7F279623B6000267B9 /* WMToolbarBackgroundView.swift */; };
@@ -144,6 +145,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		10D72720E6E16B68039680FC /* Pods_RoxchatClientLibrary_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RoxchatClientLibrary_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		11536EB328ABC53D009865AD /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "RoxchatClientLibrary/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		120059EC27A29C80003CF192 /* WMTemplatesTooltipView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WMTemplatesTooltipView.xib; sourceTree = "<group>"; };
 		120059ED27A29C80003CF192 /* WMTemplatesTooltipView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WMTemplatesTooltipView.swift; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 		12EFAAA7267B4EF600D0F803 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/WMThanksAlertView.xib; sourceTree = "<group>"; };
 		12EFAAAC267B4F1500D0F803 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/WMThanksAlertView.strings; sourceTree = "<group>"; };
 		38683A7424A4FDCB007DED63 /* UIButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIButton.swift; sourceTree = "<group>"; };
+		58558209222DEBF607CC6BB8 /* Pods-RoxchatClientLibrary_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RoxchatClientLibrary_Example.debug.xcconfig"; path = "Target Support Files/Pods-RoxchatClientLibrary_Example/Pods-RoxchatClientLibrary_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* RoxchatClientLibrary_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoxchatClientLibrary_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACD51AFB9204008FA782 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -270,6 +273,7 @@
 		90BC04BD279A2E1C0081A75F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/WMNewMessageView.strings; sourceTree = "<group>"; };
 		90EB750627963A0A0088B402 /* ChatViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ChatViewController.xib; sourceTree = "<group>"; };
 		AB52E1C1E0F009A386DC1C6C /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
+		AC364C24CA828F23BAE1BBC2 /* Pods-RoxchatClientLibrary_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RoxchatClientLibrary_Example.release.xcconfig"; path = "Target Support Files/Pods-RoxchatClientLibrary_Example/Pods-RoxchatClientLibrary_Example.release.xcconfig"; sourceTree = "<group>"; };
 		BE17D41C285B7DCD00DB606D /* WMLogsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WMLogsViewController.swift; sourceTree = "<group>"; };
 		BE17D41D285B7DCD00DB606D /* WMLogsViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = WMLogsViewController.xib; sourceTree = "<group>"; };
 		BE17D420285B8C6F00DB606D /* RoxchatLogManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoxchatLogManager.swift; sourceTree = "<group>"; };
@@ -317,6 +321,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7F94A9A4866A43B19E0F9864 /* Pods_RoxchatClientLibrary_Example.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -602,8 +607,18 @@
 		3C3DB6CF3A0FDD8E0CD44FD9 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
+				58558209222DEBF607CC6BB8 /* Pods-RoxchatClientLibrary_Example.debug.xcconfig */,
+				AC364C24CA828F23BAE1BBC2 /* Pods-RoxchatClientLibrary_Example.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		5681C593179F6644A20A6F52 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				10D72720E6E16B68039680FC /* Pods_RoxchatClientLibrary_Example.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		607FACC71AFB9204008FA782 = {
@@ -615,6 +630,7 @@
 				607FACD21AFB9204008FA782 /* Example for RoxchatClientLibrary */,
 				607FACD11AFB9204008FA782 /* Products */,
 				3C3DB6CF3A0FDD8E0CD44FD9 /* Pods */,
+				5681C593179F6644A20A6F52 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -798,12 +814,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 607FACEF1AFB9204008FA782 /* Build configuration list for PBXNativeTarget "RoxchatClientLibrary_Example" */;
 			buildPhases = (
+				D8E38A3E6CC628E5C899F936 /* [CP] Check Pods Manifest.lock */,
 				8CC584B88D331C1B48D729CB /* [Amimono] Create filelist per architecture */,
 				607FACCC1AFB9204008FA782 /* Sources */,
 				607FACCD1AFB9204008FA782 /* Frameworks */,
 				607FACCE1AFB9204008FA782 /* Resources */,
 				CE86FAB4203C3E6700CB9C2D /* ShellScript */,
 				129C626425E83D60009D4328 /* ShellScript */,
+				22F1631BA3B034E97A007EE8 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -919,6 +937,50 @@
 			shellPath = /bin/sh;
 			shellScript = "if which swiftlint >/dev/null; then\n  swiftlint\n#else\n  #echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
 		};
+		22F1631BA3B034E97A007EE8 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-RoxchatClientLibrary_Example/Pods-RoxchatClientLibrary_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/Cosmos/Cosmos.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseCore/FirebaseCore.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseCoreDiagnostics/FirebaseCoreDiagnostics.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseCrashlytics/FirebaseCrashlytics.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseInstallations/FirebaseInstallations.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleDataTransport/GoogleDataTransport.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
+				"${BUILT_PRODUCTS_DIR}/Nuke/Nuke.framework",
+				"${BUILT_PRODUCTS_DIR}/PromisesObjC/FBLPromises.framework",
+				"${BUILT_PRODUCTS_DIR}/RoxchatClientLibrary/RoxchatClientLibrary.framework",
+				"${BUILT_PRODUCTS_DIR}/SQLite.swift/SQLite.framework",
+				"${BUILT_PRODUCTS_DIR}/SlackTextViewController/SlackTextViewController.framework",
+				"${BUILT_PRODUCTS_DIR}/SnapKit/SnapKit.framework",
+				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Cosmos.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCore.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCoreDiagnostics.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCrashlytics.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseInstallations.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleDataTransport.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nuke.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBLPromises.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RoxchatClientLibrary.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SQLite.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SlackTextViewController.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SnapKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-RoxchatClientLibrary_Example/Pods-RoxchatClientLibrary_Example-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		8CC584B88D331C1B48D729CB /* [Amimono] Create filelist per architecture */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -945,6 +1007,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/FirebaseCrashlytics/run\" -gsp \"${PROJECT_DIR}/RoxchatClientLibrary/GoogleService-Info.plist\" -p ios \"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}\"\n";
+		};
+		D8E38A3E6CC628E5C899F936 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-RoxchatClientLibrary_Example-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1427,6 +1511,7 @@
 		};
 		607FACF01AFB9204008FA782 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 58558209222DEBF607CC6BB8 /* Pods-RoxchatClientLibrary_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = RoxchatClientLibrary_Example.entitlements;
@@ -1438,7 +1523,7 @@
 				INFOPLIST_FILE = RoxchatClientLibrary/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				MODULE_NAME = ExampleApp;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" -Xfrontend -warn-long-expression-type-checking=400 -Xfrontend -warn-long-function-bodies=400 -Onone";
 				PRODUCT_BUNDLE_IDENTIFIER = chat.rox.Rox;
@@ -1453,6 +1538,7 @@
 		};
 		607FACF11AFB9204008FA782 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AC364C24CA828F23BAE1BBC2 /* Pods-RoxchatClientLibrary_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = RoxchatClientLibrary_Example.entitlements;
@@ -1464,7 +1550,7 @@
 				INFOPLIST_FILE = RoxchatClientLibrary/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				MODULE_NAME = ExampleApp;
 				PRODUCT_BUNDLE_IDENTIFIER = chat.rox.Rox;
 				PRODUCT_NAME = "$(TARGET_NAME)";

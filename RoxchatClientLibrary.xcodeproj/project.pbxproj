@@ -1,3 +1,4 @@
+// !$*UTF8*$!
 {
 	archiveVersion = 1;
 	classes = {
@@ -259,7 +260,6 @@
 			children = (
 				8FD2427C200CDB18007EB9CB /* RoxchatClientLibrary */,
 				8FD2427B200CDB18007EB9CB /* Products */,
-				8FD24457200CE029007EB9CB /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -303,13 +303,6 @@
 				113057A8256D209D004BB13E /* UploadedFile.swift */,
 			);
 			path = RoxchatClientLibrary;
-			sourceTree = "<group>";
-		};
-		8FD24457200CE029007EB9CB /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		8FD24465200CE25A007EB9CB /* Backend */ = {
