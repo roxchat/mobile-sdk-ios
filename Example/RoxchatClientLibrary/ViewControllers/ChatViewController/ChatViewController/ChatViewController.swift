@@ -109,9 +109,11 @@ class ChatViewController: UIViewController, WMToolbarBackgroundViewDelegate, Dep
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        chatTableView.scrollToRow(at: IndexPath(row: messageCounter.lastReadMessageIndex, section: 0),
-                                  at: .middle,
-                                  animated: true)
+        if messages().count != 0 {
+            chatTableView.scrollToRow(at: IndexPath(row: messageCounter.lastReadMessageIndex, section: 0),
+                                      at: .middle,
+                                      animated: true)
+        }
     }
     
     override func viewDidLoad() {
@@ -469,6 +471,9 @@ class ChatViewController: UIViewController, WMToolbarBackgroundViewDelegate, Dep
     // MARK: - Private methods
     
     private func reloadTableWithNewData() {
+        if messages().isEmpty {
+            return
+        }
         self.chatTableView?.reloadData()
     }
     
@@ -548,15 +553,12 @@ class ChatViewController: UIViewController, WMToolbarBackgroundViewDelegate, Dep
         }
 
         if roxchatServerSideSettingsManager.isMessageEditEnabled()
-            && message.getData()?.getAttachment() == nil
             && message.canBeEdited() {
             viewController.actions.append(.edit)
 
             // If image hide show edit action
-            if let contentType = message.getData()?.getAttachment()?.getFileInfo().getContentType() {
-                if MimeType.isImage(contentType: contentType) {
-                    viewController.actions.removeLast()
-                }
+            if message.getData()?.getAttachment() != nil {
+                viewController.actions.removeLast()
             }
             viewController.actions.append(.delete)
         }
@@ -624,12 +626,14 @@ class ChatViewController: UIViewController, WMToolbarBackgroundViewDelegate, Dep
         RoxchatServiceController.currentSession.getLastMessages { [weak self] messages in
             
             DispatchQueue.main.async {
-                self?.chatMessages.insert(contentsOf: messages, at: 0)
-                self?.reloadTableWithNewData()
-                self?.scrollToBottom(animated: false)
-                if messages.count < RoxchatService.ChatSettings.messagesPerRequest.rawValue {
-                    self?.scrollToBottom = true
-                    self?.requestMessages()
+                if messages.count != 0 {
+                    self?.chatMessages.insert(contentsOf: messages, at: 0)
+                    self?.reloadTableWithNewData()
+                    self?.scrollToBottom(animated: false)
+                    if messages.count < RoxchatService.ChatSettings.messagesPerRequest.rawValue {
+                        self?.scrollToBottom = true
+                        self?.requestMessages()
+                    }
                 }
             }
         }

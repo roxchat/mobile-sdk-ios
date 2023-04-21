@@ -148,7 +148,7 @@ SPEC CHECKSUMS:
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   Nuke: d780e3507a86b86c589ab3cc5cd302d5456f06fb
   PromisesObjC: 3113f7f76903778cf4a0586bd1ab89329a0b7b97
-  RoxchatClientLibrary: f9d63c1f31e8b9af978ba75821b4aa3266b871a0
+  RoxchatClientLibrary: 55166bae2b6b37493c27d6c68d3d5b6f024e3b74
   SlackTextViewController: b854e62c1c156336bc4fd409c6ca79b5773e8f9d
   SnapKit: 97b92857e3df3a0c71833cce143274bf6ef8e5eb
   SQLite.swift: 903bfa3bc9ab06345fdfbb578e34f47cfcf417da

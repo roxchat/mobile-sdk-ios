@@ -161,7 +161,7 @@ class DeltaRequestLoop: AbstractRequestLoop {
     func requestInitialization() {
         let url = URL(string: getDeltaServerURLString() + "?" + getInitializationParameterString())
         var request = URLRequest(url: url!)
-        request.setValue("3.0.1", forHTTPHeaderField: Parameter.roxchatSDKVersion.rawValue)
+        request.setValue("3.0.2", forHTTPHeaderField: Parameter.roxchatSDKVersion.rawValue)
         request.httpMethod = AbstractRequestLoop.HTTPMethods.get.rawValue
         
         do {
