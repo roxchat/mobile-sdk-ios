@@ -169,7 +169,9 @@ final class DeltaCallback {
         default:
             break
         }
-        
+        for message in currentChat?.getMessages() ?? [] {
+            RoxchatInternalLogger.shared.log(entry: "Delta chat: \'\(message.getText() ?? "")\'", verbosityLevel: .debug, logType: .messageHistory)
+        }
         messageStream?.changingChatStateOf(chat: currentChat)
     }
     
@@ -182,7 +184,7 @@ final class DeltaCallback {
             if let currentChat = currentChat {
                 var currentChatMessages = currentChat.getMessages()
                 for (currentChatMessageIndex, currentChatMessage) in currentChatMessages.enumerated() {
-                    if currentChatMessage.getID() == deltaID { // Deleted message ID is passed as delta ID.
+                    if currentChatMessage.getServerSideID() == deltaID { // Deleted message ID is passed as delta ID.
                         currentChatMessages.remove(at: currentChatMessageIndex)
                         currentChat.set(messages: currentChatMessages)
                         historyMessage = historyMessageMapper.map(message: currentChatMessage)
@@ -194,7 +196,7 @@ final class DeltaCallback {
             
             messageHolder?.deletedMessageWith(id: deltaID)
             if let historyMessage = historyMessage {
-                historyPoller?.deleteMessageFromDB(message: historyMessage.getID())
+                historyPoller?.deleteMessageFromDB(message: historyMessage.getServerSideID() ?? historyMessage.getID())
             }
         } else {
             guard let deltaData = delta.getData() as? [String : Any] else {
@@ -203,6 +205,7 @@ final class DeltaCallback {
             
             let messageItem = MessageItem(jsonDictionary: deltaData)
             let message = currentChatMessageMapper.map(message: messageItem)
+            RoxchatInternalLogger.shared.log(entry: "Delta message: \'\(message?.getText() ?? "")\'", verbosityLevel: .debug, logType: .messageHistory)
             if deltaEvent == .add {
                 var isNewMessage = false
                 if let currentChat = currentChat,
@@ -221,7 +224,7 @@ final class DeltaCallback {
                 if let currentChat = currentChat {
                     var currentChatMessages = currentChat.getMessages()
                     for (currentChatMessageIndex, currentChatMessage) in currentChatMessages.enumerated() {
-                        if currentChatMessage.getID() == messageItem.getID() {
+                        if currentChatMessage.getServerSideID() == messageItem.getServerSideID() {
                             currentChatMessages[currentChatMessageIndex] = messageItem
                             currentChat.set(messages: currentChatMessages)
                             
@@ -246,7 +249,7 @@ final class DeltaCallback {
             if let currentChat = currentChat {
                 var currentChatMessages = currentChat.getMessages()
                 for (currentChatMessageIndex, currentChatMessage) in currentChatMessages.enumerated() {
-                    if currentChatMessage.getID() == deltaId {
+                    if currentChatMessage.getServerSideID() == deltaId {
                         currentChatMessage.setRead(read: isRead)
                         guard let message = currentChatMessageMapper.map(message: currentChatMessage) else {
                             return

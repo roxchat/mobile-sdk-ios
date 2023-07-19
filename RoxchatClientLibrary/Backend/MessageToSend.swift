@@ -8,15 +8,16 @@ final class MessageToSend: MessageImpl {
     
     // MARK: - Initialization
     init(serverURLString: String,
-         id: String,
+         clientSideID: String,
          senderName: String,
          type: MessageType,
          text: String,
          timeInMicrosecond: Int64,
+         data: MessageData? = nil,
          quote: Quote? = nil,
          sticker: Sticker? = nil) {
         super.init(serverURLString: serverURLString,
-                   id: id,
+                   clientSideID: clientSideID,
                    serverSideID: nil,
                    keyboard: nil,
                    keyboardRequest: nil,
@@ -28,7 +29,7 @@ final class MessageToSend: MessageImpl {
                    sticker: sticker,
                    type: type,
                    rawData: nil,
-                   data: nil,
+                   data: data,
                    text: text,
                    timeInMicrosecond: timeInMicrosecond,
                    historyMessage: false,

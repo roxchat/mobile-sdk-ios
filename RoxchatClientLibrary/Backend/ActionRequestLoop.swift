@@ -53,14 +53,14 @@ class ActionRequestLoop: AbstractRequestLoop {
         self.authorizationData = authorizationData
     }
     
-    func enqueue(request: RoxchatRequest) {
+    func enqueue(request: RoxchatRequest, withAuthData: Bool = true) {
         let operationQueue = request.getCompletionHandler() != nil ? historyRequestOperationQueue : actionOperationQueue
         operationQueue?.addOperation { [weak self] in
             guard let `self` = self else {
                 return
             }
             
-            let urlRequest = self.createUrlRequest(request: request)
+            let urlRequest = self.createUrlRequest(request: request, withAuthData: withAuthData)
             
             do {
                 guard let urlRequest = urlRequest else {
@@ -126,7 +126,7 @@ class ActionRequestLoop: AbstractRequestLoop {
         }
     }
     
-    private func createUrlRequest(request: RoxchatRequest) -> URLRequest? {
+    private func createUrlRequest(request: RoxchatRequest, withAuthData: Bool) -> URLRequest? {
         if self.authorizationData == nil {
             do {
                 try self.authorizationData = self.awaitForNewAuthorizationData(withLastAuthorizationData: nil) // wtf
@@ -146,8 +146,10 @@ class ActionRequestLoop: AbstractRequestLoop {
         }
         
         var parameterDictionary = request.getPrimaryData()
-        parameterDictionary[Parameter.pageID.rawValue] = usedAuthorizationData.getPageID()
-        parameterDictionary[Parameter.authorizationToken.rawValue] = usedAuthorizationData.getAuthorizationToken()
+        if withAuthData {
+            parameterDictionary[Parameter.pageID.rawValue] = usedAuthorizationData.getPageID()
+            parameterDictionary[Parameter.authorizationToken.rawValue] = usedAuthorizationData.getAuthorizationToken()
+        }
         let parametersString = parameterDictionary.stringFromHTTPParameters()
         
         var urlRequest: URLRequest?
@@ -211,12 +213,14 @@ class ActionRequestLoop: AbstractRequestLoop {
              RoxchatInternalError.fileSizeTooSmall.rawValue:
             self.handleSendFile(error: error,
                                 ofRequest: request)
+            RoxchatInternalAlert.shared.present(title: .visitorActionError, message: .fileSendingError)
             
             break
         case RoxchatInternalError.fileNotFound.rawValue,
              RoxchatInternalError.fileHasBeenSent.rawValue:
             self.handleDeleteUploadedFile(error: error,
                                   ofRequest: request)
+            RoxchatInternalAlert.shared.present(title: .visitorActionError, message: .fileDeletingError)
             
             break
         case RoxchatInternalError.wrongArgumentValue.rawValue:
@@ -227,6 +231,7 @@ class ActionRequestLoop: AbstractRequestLoop {
              RoxchatInternalError.operatorNotInChat.rawValue:
             self.handleRateOperator(error: error,
                                     ofRequest: request)
+            RoxchatInternalAlert.shared.present(title: .visitorActionError, message: .operatorRatingError)
             
             break
         case RoxchatInternalError.messageNotFound.rawValue,
@@ -240,7 +245,8 @@ class ActionRequestLoop: AbstractRequestLoop {
             break
         case RoxchatInternalError.buttonIdNotSet.rawValue,
              RoxchatInternalError.requestMessageIdNotSet.rawValue,
-             RoxchatInternalError.canNotCreateResponse.rawValue:
+             RoxchatInternalError.canNotCreateResponse.rawValue,
+             RoxchatInternalError.canNotCreateResponseOld.rawValue:
             self.handleKeyboardResponse(error: error,
                                         ofRequest: request)
             break
@@ -272,6 +278,7 @@ class ActionRequestLoop: AbstractRequestLoop {
              RoxchatInternalError.wrongProvidedVisitorFieldsHashValue.rawValue:
              self.internalErrorListener?.on(error: error)
              self.internalErrorListener?.connectionStateChanged(connected: false)
+            RoxchatInternalAlert.shared.present(title: .accountError, message: .accountConnectionError)
              break
         case RoxchatInternalError.invalidCoordinatesReceived.rawValue:
             self.handleGeolocationCompletionHandler(error: error, ofRequest: request)
@@ -342,6 +349,20 @@ class ActionRequestLoop: AbstractRequestLoop {
                 }
                 
             })
+        }
+        
+        if let completionHandler = request.getAutocompleteCompletionHandler() {
+            if let suggestions = dataJSON["suggestions"] as? [[String: Any?]] {
+                var suggestuionTexts = [String]()
+                for suggestion in suggestions {
+                    if let text = suggestion["text"] as? String {
+                        suggestuionTexts.append(text)
+                    }
+                }
+                completionHandler.onSuccess(text: suggestuionTexts)
+            } else {
+                completionHandler.onFailure(error: .hintApiInvalid)
+            }
         }
         
         self.handleClientCompletionHandlerOf(request: request, dataJSON: dataJSON[AbstractRequestLoop.ResponseFields.data.rawValue] as? [String : Any?])
@@ -662,6 +683,9 @@ class ActionRequestLoop: AbstractRequestLoop {
                 switch errorString {
                 case RoxchatInternalError.sentTooManyTimes.rawValue:
                     sendDialogResponseError = .sentTooManyTimes
+                    break
+                case RoxchatInternalError.noChat.rawValue:
+                    sendDialogResponseError = .noChat
                     break
                 default:
                     sendDialogResponseError = .unknown

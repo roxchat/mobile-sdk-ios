@@ -38,6 +38,7 @@ final class RoxchatRequest {
     private var reacionCompletionHandler: ReactionCompletionHandler?
     private var geolocationCompletionHandler: GeolocationCompletionHandler?
     private var serverSideSettingsCompletionHandler: ServerSideSettingsCompletionHandler?
+    private var autocompleteCompletionHandler: AutocompleteCompletionHandler?
     
     // MARK: - Initialization
     init(httpMethod: AbstractRequestLoop.HTTPMethods,
@@ -70,7 +71,8 @@ final class RoxchatRequest {
          uploadFileToServerCompletionHandler: UploadFileToServerCompletionHandler? = nil,
          reacionCompletionHandler: ReactionCompletionHandler? = nil,
          geolocationCompletionHandler: GeolocationCompletionHandler? = nil,
-         serverSideSettingsCompletionHandler: ServerSideSettingsCompletionHandler? = nil) {
+         serverSideSettingsCompletionHandler: ServerSideSettingsCompletionHandler? = nil,
+         autocompleteCompletionHandler: AutocompleteCompletionHandler? = nil) {
         self.httpMethod = httpMethod
         self.primaryData = primaryData
         self.messageID = messageID
@@ -102,6 +104,7 @@ final class RoxchatRequest {
         self.reacionCompletionHandler = reacionCompletionHandler
         self.geolocationCompletionHandler = geolocationCompletionHandler
         self.serverSideSettingsCompletionHandler = serverSideSettingsCompletionHandler
+        self.autocompleteCompletionHandler = autocompleteCompletionHandler
     }
     
     
@@ -229,5 +232,9 @@ final class RoxchatRequest {
 
     func getServerSideCompletionHandler() -> ServerSideSettingsCompletionHandler? {
         return serverSideSettingsCompletionHandler
+    }
+    
+    func getAutocompleteCompletionHandler() -> AutocompleteCompletionHandler? {
+        return autocompleteCompletionHandler
     }
 }

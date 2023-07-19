@@ -7,7 +7,7 @@ import Foundation
 class MessageImpl {
     
     // MARK: - Properties
-    private let id: String
+    private let clientSideID: String
     private let serverSideID: String?
     private let keyboard: Keyboard?
     private let keyboardRequest: KeyboardRequest?
@@ -37,7 +37,7 @@ class MessageImpl {
     
     // MARK: - Initialization
     init(serverURLString: String,
-         id: String,
+         clientSideID: String,
          serverSideID: String?,
          keyboard: Keyboard?,
          keyboardRequest: KeyboardRequest?,
@@ -63,7 +63,7 @@ class MessageImpl {
          visitorCanReact: Bool?,
          visitorChangeReaction: Bool?) {
         self.data = data
-        self.id = id
+        self.clientSideID = clientSideID
         self.serverSideID = serverSideID
         self.keyboard = keyboard
         self.keyboardRequest = keyboardRequest
@@ -233,7 +233,7 @@ class MessageImpl {
         return """
 MessageImpl {
     serverURLString = \(serverURLString),
-    ID = \(id),
+    ID = \(clientSideID),
     operatorID = \(operatorID ?? "nil"),
     senderAvatarURLString = \(senderAvatarURLString ?? "nil"),
     senderName = \(senderName),
@@ -300,7 +300,7 @@ extension MessageImpl: Message {
     }
     
     func getID() -> String {
-        return id
+        return clientSideID
     }
     
     func getServerSideID() -> String? {
@@ -403,7 +403,7 @@ extension MessageImpl: Equatable {
     
     static func == (lhs: MessageImpl,
                     rhs: MessageImpl) -> Bool {
-        return ((((((((lhs.id == rhs.id)
+        return ((((((((lhs.clientSideID == rhs.clientSideID)
             && (lhs.operatorID == rhs.operatorID))
             && (lhs.rawText == rhs.rawText))
             && (lhs.senderAvatarURLString == rhs.senderAvatarURLString))
@@ -811,6 +811,10 @@ final class KeyboardButtonImpl: KeyboardButton {
     func getConfiguration() -> Configuration? {
         return ConfigurationImpl(data: buttonItem.getConfiguration())
     }
+    
+    func getParams() -> Params? {
+        return ParamsImpl(data: buttonItem.getParams())
+    }
 }
 
 /**
@@ -901,6 +905,32 @@ final class ConfigurationImpl: Configuration {
     
     func getState() -> ButtonState {
         return configurationItem.getState()
+    }
+ 
+}
+
+/**
+ - seealso:
+ `KeyboardButton`
+ */
+final class ParamsImpl: Params {
+    
+    private let paramsItem: ParamsItem?
+    
+    init(data: ParamsItem?) {
+        self.paramsItem = data
+    }
+    
+    func getType() -> ParamsButtonType? {
+        return paramsItem?.getType()
+    }
+    
+    func getAction() -> String? {
+        return paramsItem?.getAction()
+    }
+    
+    func getColor() -> String? {
+        return paramsItem?.getColor()
     }
  
 }

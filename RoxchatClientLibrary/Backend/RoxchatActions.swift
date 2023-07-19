@@ -18,6 +18,16 @@ protocol RoxchatActions {
               completionHandler: SendFileCompletionHandler?,
               uploadFileToServerCompletionHandler: UploadFileToServerCompletionHandler?)
     
+    func sendFileProgress(fileSize: Int,
+                          filename: String,
+                          mimeType: String,
+                          clientSideID: String,
+                          error: SendFileError?,
+                          progress: Int?,
+                          state: SendFileProgressState,
+                          completionHandler: SendFileCompletionHandler?,
+                          uploadFileToServerCompletionHandler: UploadFileToServerCompletionHandler?)
+    
     func sendFiles(message: String,
                    clientSideID: String,
                    isHintQuestion: Bool?,
@@ -97,8 +107,12 @@ protocol RoxchatActions {
     
     func clearHistory()
     
-    func getRawConfig(forLocation: String,
-                      completion: @escaping (_ data: Data?) throws -> ())
+    func getServerSettings(forLocation: String,
+                          completion: @escaping (_ data: Data?) throws -> ())
+    
+    func autocomplete(forText: String,
+                      url: String,
+                      completion: AutocompleteCompletionHandler?)
 
     func getServerSideSettings(completionHandler: ServerSideSettingsCompletionHandler?)
     

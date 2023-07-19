@@ -105,6 +105,7 @@ public final class SessionBuilder  {
     private weak var roxchatLogger: RoxchatLogger?
     private var roxchatLoggerVerbosityLevel: RoxchatLoggerVerbosityLevel?
     private var availableLogTypes = [RoxchatLogType]()
+    private weak var roxchatAlert: RoxchatAlert?
     private var prechat: String?
     private var onlineStatusRequestFrequencyInMillis: Int64?
 
@@ -374,6 +375,21 @@ public final class SessionBuilder  {
 
         return self
     }
+    
+    /**
+     Method to pass RoxchatLogger object.
+     - parameter roxchatLogger:
+     `RoxchatLogger` object.
+     - returns:
+     `SessionBuilder` object with `RoxchatLogger` object set.
+     - seealso:
+     `RoxchatLogger`
+     */
+    public func set(roxchatAlert: RoxchatAlert) -> SessionBuilder {
+        self.roxchatAlert = roxchatAlert
+
+        return self
+    }
 
     /**
      Builds new `RoxchatSession` object.
@@ -433,7 +449,7 @@ public final class SessionBuilder  {
                     index = nextIndex
                 }
                 let data = Data(_: byteArray)
-                prechat = String(data:data, encoding: .utf8)!
+                prechat = String(data:data, encoding: .utf8) ?? ""
                 print("prechat parsed: \(prechat)")
             }
             //prechat is json or string data
@@ -473,6 +489,7 @@ public final class SessionBuilder  {
                                                 roxchatLogger: roxchatLogger,
                                                 verbosityLevel: roxchatLoggerVerbosityLevel,
                                                 availableLogTypes: availableLogTypes,
+                                                roxchatAlert: roxchatAlert,
                                                 prechat: prechat,
                                                 multivisitorSection: multivisitorSection,
                                                 onlineStatusRequestFrequencyInMillis: onlineStatusRequestFrequencyInMillis) as RoxchatSession

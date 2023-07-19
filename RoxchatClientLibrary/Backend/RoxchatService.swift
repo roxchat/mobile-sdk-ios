@@ -61,6 +61,11 @@ enum Parameter: String {
     case roxchatSDKVersion = "x-roxchat-sdk-version"
     case query = "query"
     case reaction = "reaction"
+    case fileState = "state"
+    case fileProgress = "progress"
+    case fileError = "error"
+    case fileSize = "file-size"
+    case fileName = "file-name"
 }
 
 enum Platform: String {
@@ -71,6 +76,7 @@ enum ServerPathSuffix: String {
     case doAction = "/l/v/m/action"
     case fileDelete = "/l/v/file-delete"
     case getDelta = "/l/v/m/delta"
+    case initPath = "/l/v/m/init"
     case getOnlineStatus = "/l/v/m/get-online-status"
     case downloadFile = "/l/v/m/download"
     case getHistory = "/l/v/m/history"

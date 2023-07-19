@@ -73,7 +73,7 @@ class AbstractRequestLoop {
     
     func perform(request: URLRequest) throws -> Data {
         var requestWithUserAgent = request
-        requestWithUserAgent.setValue("iOS: Roxchat-Client 3.0.2; (\(UIDevice.current.model); \(UIDevice.current.systemVersion)); Bundle ID and version: \(Bundle.main.bundleIdentifier ?? "none") \(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "none")", forHTTPHeaderField: "User-Agent")
+        requestWithUserAgent.setValue("iOS: Roxchat-Client 3.0.3; (\(UIDevice.current.model); \(UIDevice.current.systemVersion)); Bundle ID and version: \(Bundle.main.bundleIdentifier ?? "none") \(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "none")", forHTTPHeaderField: "User-Agent")
         
         var errorCounter = 0
         var lastHTTPCode = -1
@@ -112,6 +112,7 @@ class AbstractRequestLoop {
                     RoxchatInternalLogger.shared.log(
                         entry: roxchatLoggerEntry,
                         logType: .networkRequest)
+                    RoxchatInternalAlert.shared.present(title: .networkError, message: .noNetworkConnection)
                     
                     if let error = error as NSError?,
                         !(error.domain == NSURLErrorDomain && error.code == NSURLErrorNotConnectedToInternet) {
@@ -155,7 +156,7 @@ class AbstractRequestLoop {
             }
             
             if let receivedData = receivedData,
-                (httpCode == 200 || httpCode == 403 || httpCode == 413 || httpCode == 415) {
+               (httpCode == 200 || httpCode == 400 || httpCode == 403 || httpCode == 413 || httpCode == 415) {
                 self.internalErrorListener?.connectionStateChanged(connected: true)
                 return receivedData
             }
@@ -221,7 +222,8 @@ class AbstractRequestLoop {
     }
 
     func prepareServerSideData(rawData: Data) -> Data {
-        guard var rawDataString = String(data: rawData, encoding: .utf8) else {
+        guard var rawDataString = String(data: rawData, encoding: .utf8),
+              rawDataString.count >= 33 else {
             return Data()
         }
 
@@ -256,7 +258,7 @@ class AbstractRequestLoop {
             logType: .networkRequest)
     }
     
-    static let logRequestData = true
+    static var logRequestData = true
     
     private func configureLogMessage(type: String,
                                      method: String? = nil,

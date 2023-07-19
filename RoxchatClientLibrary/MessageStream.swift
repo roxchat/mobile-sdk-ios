@@ -25,6 +25,12 @@ public protocol MessageStream: class {
     
     /**
      - returns:
+     Current chat id.
+     */
+    func getChatId() -> Int?
+    
+    /**
+     - returns:
      Timestamp after which all chat messages are unread by operator (at the moment of last server update recieved).
      */
     func getUnreadByOperatorTimestamp() -> Date?
@@ -473,6 +479,21 @@ public protocol MessageStream: class {
      */
     func sendSticker(withId: Int,
                      completionHandler: SendStickerCompletionHandler?) throws
+    
+    /**
+     This method receiving hints.
+     - parameter text:
+     The string which hints are found for.
+     - parameter completionHandler:
+     Completion handler that executes when operation is done.
+     - throws:
+     `AccessError.invalidThread` if the method was called not from the thread the RoxchatSession was created in.
+     `AccessError.invalidSession` if RoxchatSession was destroyed.
+     - attention:
+     This method can't be used as is. It requires that client server to support this mechanism.
+     */
+    func autocomplete(text: String,
+                      completionHandler: AutocompleteCompletionHandler?) throws
     
     /**
      Receive raw location config from server.
@@ -1098,6 +1119,30 @@ public protocol SendStickerCompletionHandler: class {
      `SendStickerError`.
      */
     func onFailure(error: SendStickerError)
+    
+}
+
+/**
+ - seealso:
+ `MessageStream.autocomplete(text:completionHandler:)`.
+ - attention:
+ This protocol can't be used as is. It requires that client server to support this mechanism.
+ */
+public protocol AutocompleteCompletionHandler: class {
+    
+    /**
+     Executed when operation is done successfully.
+     */
+    func onSuccess(text: [String])
+    
+    /**
+     Executed when operation is failed.
+     - parameter error:
+     Error.
+     - seealso:
+     `SendStickerError`.
+     */
+    func onFailure(error: AutocompleteError)
     
 }
 
@@ -1998,6 +2043,22 @@ public enum SendStickerError: Error {
 
 /**
 - seealso:
+`AutocompleteCompletionHandler.onFailure(error:)`
+*/
+public enum AutocompleteError: Error {
+    /**
+     When visitor hints api endpoint is not set or invalid in the server account config.
+     */
+    case hintApiInvalid
+    
+    /**
+     Received error is not supported by current RoxchatClientLibrary version.
+     */
+    case unknown
+}
+
+/**
+- seealso:
 `ReactionCompletionHandler.onFailure(error:)`
 */
 public enum ReactionError: Error {
@@ -2126,4 +2187,10 @@ public enum ReactionString {
     */
     case dislike
     
+}
+
+public enum SendFileProgressState: String {
+    case upload
+    
+    case error
 }

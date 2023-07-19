@@ -44,10 +44,12 @@ class MessageMapper {
             return .operatorBusy
         case .visitorMessage:
             return .visitorMessage
+        case .stickerVisitor:
+            return .stickerVisitor
         default:
             RoxchatInternalLogger.shared.log(entry: "Invalid message type received: \(messageKind.rawValue)",
                 verbosityLevel: .warning)
-            
+
             return nil
         }
     }
@@ -208,8 +210,8 @@ class MessageMapper {
         }
         
         return MessageImpl(serverURLString: serverURLString,
-                           id: clientSideID,
-                           serverSideID: messageItem.getID(),
+                           clientSideID: clientSideID,
+                           serverSideID: messageItem.getServerSideID(),
                            keyboard: keyboard,
                            keyboardRequest: keyboardRequest,
                            operatorID: messageItem.getSenderID(),
@@ -223,7 +225,7 @@ class MessageMapper {
                            text: messageText,
                            timeInMicrosecond: timeInMicrosecond,
                            historyMessage: historyMessage,
-                           internalID: messageItem.getID(),
+                           internalID: messageItem.getServerSideID(),
                            rawText: rawText,
                            read: messageItem.getRead() ?? true,
                            messageCanBeEdited: messageItem.getCanBeEdited(),
@@ -294,7 +296,7 @@ final class SendingFactory {
     func createTextMessageToSendWith(id: String,
                                      text: String) -> MessageToSend {
         return MessageToSend(serverURLString: serverURLString,
-                             id: id,
+                             clientSideID: id,
                              senderName: "",
                              type: .visitorMessage,
                              text: text,
@@ -305,7 +307,7 @@ final class SendingFactory {
                                               text: String,
                                               repliedMessage: Message) -> MessageToSend {
         return MessageToSend(serverURLString: serverURLString,
-                             id: id,
+                             clientSideID: id,
                              senderName: "",
                              type: .visitorMessage,
                              text: text,
@@ -322,18 +324,19 @@ final class SendingFactory {
     }
 
     
-    func createFileMessageToSendWith(id: String) -> MessageToSend {
+    func createFileMessageToSendWith(id: String, data: MessageData? = nil) -> MessageToSend {
         return MessageToSend(serverURLString: serverURLString,
-                             id: id,
+                             clientSideID: id,
                              senderName: "",
                              type: .fileFromVisitor,
                              text: "",
-                             timeInMicrosecond: InternalUtils.getCurrentTimeInMicrosecond())
+                             timeInMicrosecond: InternalUtils.getCurrentTimeInMicrosecond(),
+                             data: data)
     }
     
     func createStickerMessageToSendWith(id: String, stickerId: Int) -> MessageToSend {
         return MessageToSend(serverURLString: serverURLString,
-                             id: id,
+                             clientSideID: id,
                              senderName: "",
                              type: .stickerVisitor,
                              text: "",

@@ -75,12 +75,14 @@ final class RoxchatSessionImpl {
                                 roxchatLogger: RoxchatLogger?,
                                 verbosityLevel: SessionBuilder.RoxchatLoggerVerbosityLevel?,
                                 availableLogTypes: [SessionBuilder.RoxchatLogType],
+                                roxchatAlert: RoxchatAlert?,
                                 prechat: String?,
                                 multivisitorSection: String,
                                 onlineStatusRequestFrequencyInMillis: Int64?) -> RoxchatSessionImpl {
         RoxchatInternalLogger.setup(roxchatLogger: roxchatLogger,
                                   verbosityLevel: verbosityLevel,
                                   availableLogTypes: availableLogTypes)
+        RoxchatInternalAlert.setup(roxchatAlert: roxchatAlert)
         let roxchatSdkQueue = DispatchQueue.current!
         
         
@@ -239,6 +241,7 @@ final class RoxchatSessionImpl {
                                           historyStorage: historyStorage,
                                           reachedEndOfRemoteHistory: historyMetaInformationStoragePreferences.isHistoryEnded())
         let messageStream = MessageStreamImpl(serverURLString: serverURLString,
+                                              location: location,
                                               currentChatMessageFactoriesMapper: currentChatMessageMapper,
                                               sendingMessageFactory: SendingFactory(withServerURLString: serverURLString),
                                               operatorFactory: OperatorFactory(withServerURLString: serverURLString),
@@ -631,6 +634,52 @@ final class HistoryPoller {
         }
         return readBeforeTimestamp
     }
+
+    public func requestHistory(since: String) {
+        if self.lastRevision == nil || self.lastRevision != since {
+            guard let historySinceCompletionHandler = historySinceCompletionHandler else {
+                RoxchatInternalLogger.shared.log(
+                    entry: "History Since Completion Handler is nil in RoxchatSessionImpl.\(#function)",
+                    logType: .networkRequest)
+                return
+            }
+            requestHistory(since: lastRevision, completion: historySinceCompletionHandler)
+        }
+    }
+
+    public func insertMessageInDB(message: MessageImpl) {
+        guard !sessionDestroyer.isDestroyed() else {
+            RoxchatInternalLogger.shared.log(
+                entry: "Current session is destroyed in RoxchatSessionImpl - \(#function)")
+            return
+        }
+        var messages = [MessageImpl]()
+        messages.append(message)
+        messageHolder.receiveHistoryUpdateWith(messages: messages, deleted: Set<String>()) {
+            [weak self] in
+            self?.historyMetaInformationStorage.set(revision: self?.lastRevision)
+        }
+        RoxchatInternalLogger.shared.log(
+            entry: "Insert message \(message.getText()) in DB",
+            verbosityLevel: .verbose)
+    }
+
+    public func deleteMessageFromDB(message: String) {
+        guard !sessionDestroyer.isDestroyed() else {
+            RoxchatInternalLogger.shared.log(
+                entry: "Current session is destroyed")
+            return
+        }
+        var deleted = Set<String>()
+        deleted.insert(message)
+        messageHolder.receiveHistoryUpdateWith(messages: [MessageImpl](), deleted: deleted) {
+            [weak self] in
+            self?.historyMetaInformationStorage.set(revision: self?.lastRevision)
+        }
+        RoxchatInternalLogger.shared.log(
+            entry: "Delete message \(message) in DB",
+            verbosityLevel: .verbose)
+    }
     
     // MARK: Private methods
     
@@ -698,18 +747,6 @@ final class HistoryPoller {
         }
     }
     
-    public func requestHistory(since: String) {
-        if self.lastRevision == nil || self.lastRevision != since {
-            guard let historySinceCompletionHandler = historySinceCompletionHandler else {
-                RoxchatInternalLogger.shared.log(
-                    entry: "History Since Completion Handler is nil in RoxchatSessionImpl.\(#function)",
-                    logType: .networkRequest)
-                return
-            }
-            requestHistory(since: lastRevision, completion: historySinceCompletionHandler)
-        }
-    }
-    
     private func requestHistory(since: String?,
                                 completion: @escaping (_ messageList: [MessageImpl], _ deleted: Set<String>, _ hasMore: Bool, _ isInitial: Bool, _ revision: String?) -> ()) {
         roxchatActions.requestHistory(since: since) { data in
@@ -725,7 +762,7 @@ final class HistoryPoller {
                     if let messages = historySinceResponse.getData()?.getMessages() {
                         for message in messages {
                             if message.isDeleted() {
-                                if let id = message.getID() {
+                                if let id = message.getServerSideID() {
                                     deletes.insert(id)
                                 }
                             } else {
@@ -751,41 +788,6 @@ final class HistoryPoller {
             verbosityLevel: .verbose,
             logType: .networkRequest)
     }
-    
-    public func insertMessageInDB(message: MessageImpl) {
-        guard !sessionDestroyer.isDestroyed() else {
-            RoxchatInternalLogger.shared.log(
-                entry: "Current session is destroyed in RoxchatSessionImpl - \(#function)")
-            return
-        }
-        var messages = [MessageImpl]()
-        messages.append(message)
-        messageHolder.receiveHistoryUpdateWith(messages: messages, deleted: Set<String>()) {
-            [weak self] in
-            self?.historyMetaInformationStorage.set(revision: self?.lastRevision)
-        }
-        RoxchatInternalLogger.shared.log(
-            entry: "Insert message \(message.getText()) in DB",
-            verbosityLevel: .verbose)
-    }
-    
-    public func deleteMessageFromDB(message: String) {
-        guard !sessionDestroyer.isDestroyed() else {
-            RoxchatInternalLogger.shared.log(
-                entry: "Current session is destroyed")
-            return
-        }
-        var deleted = Set<String>()
-        deleted.insert(message)
-        messageHolder.receiveHistoryUpdateWith(messages: [MessageImpl](), deleted: deleted) {
-            [weak self] in
-            self?.historyMetaInformationStorage.set(revision: self?.lastRevision)
-        }
-        RoxchatInternalLogger.shared.log(
-            entry: "Delete message \(message) in DB",
-            verbosityLevel: .verbose)
-    }
-    
 }
 
 /**

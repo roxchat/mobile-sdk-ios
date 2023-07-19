@@ -467,6 +467,12 @@ public protocol KeyboardButton {
      Config of a button.
      */
     func getConfiguration() -> Configuration?
+    
+    /**
+     - returns:
+     Params of a button.
+     */
+    func getParams() -> Params?
 }
 
 /**
@@ -497,6 +503,24 @@ public protocol Configuration {
      Button state.
      */
     func getState() -> ButtonState
+}
+
+/**
+ Keyboard button params.
+ */
+public protocol Params {
+    
+    /**
+     */
+    func getAction() -> String?
+    
+    /**
+     */
+    func getType() -> ParamsButtonType?
+    
+    /**
+     */
+    func getColor() -> String?
 }
 
 
@@ -805,5 +829,13 @@ public enum ButtonState {
     case showingSelected
     
     case hidden
+    
+}
+
+public enum ParamsButtonType {
+    
+    case url
+    
+    case action
     
 }

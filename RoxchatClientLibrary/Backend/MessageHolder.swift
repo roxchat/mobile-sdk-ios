@@ -321,16 +321,14 @@ final class MessageHolder {
     }
     
     func sendingCancelledWith(messageID: String) {
-        for messageIndex in 0 ..< messagesToSend.count {
-            if messagesToSend[messageIndex].getID() == messageID {
-                let message = messagesToSend[messageIndex]
-
+        for (index, message) in messagesToSend.enumerated() {
+            if message.getID() == messageID {
                 RoxchatInternalLogger.shared.log(
                     entry: "Cancell sending message \(message.getText())",
                     verbosityLevel: .verbose,
                     logType: .messageHistory)
                 
-                messagesToSend.remove(at: messageIndex)
+                messagesToSend.remove(at: index)
                 
                 messageTracker?.messageListener?.removed(message: message)
                 
@@ -364,7 +362,7 @@ final class MessageHolder {
         }
         
         let newMessage = MessageImpl(serverURLString: messageImpl.getServerUrlString(),
-                                     id: messageID,
+                                     clientSideID: messageID,
                                      serverSideID: messageImpl.getServerSideID(),
                                      keyboard: messageImpl.getKeyboard(),
                                      keyboardRequest: messageImpl.getKeyboardRequest(),
@@ -422,7 +420,7 @@ final class MessageHolder {
         }
         
         let newMessage = MessageImpl(serverURLString: messageImpl.getServerUrlString(),
-                                     id: messageID,
+                                     clientSideID: messageID,
                                      serverSideID: messageImpl.getServerSideID(),
                                      keyboard: messageImpl.getKeyboard(),
                                      keyboardRequest: messageImpl.getKeyboardRequest(),
@@ -450,7 +448,7 @@ final class MessageHolder {
         messageTracker?.messageListener?.changed(message: messageImpl, to: newMessage)
 
         RoxchatInternalLogger.shared.log(
-            entry: "Changing message \(messageImpl.getText()) cancelled. Expected message - \(newMessage.getText())",
+            entry: "Changing message \(messageImpl.getText()) cancelled. Еxpected message - \(newMessage.getText())",
             verbosityLevel: .verbose,
             logType: .messageHistory)
     }
@@ -520,6 +518,10 @@ final class MessageHolder {
                         if currentChatMessage != historyMessage {
                             messageTracker?.messageListener?.changed(message: currentChatMessage,
                                                                      to: historyMessage)
+                            RoxchatInternalLogger.shared.log(
+                                entry: "Changing success.\nMessage \(currentChatMessage.getText()) changed to \(historyMessage.getText()) in MessageHolder - \(#function)",
+                                verbosityLevel: .verbose,
+                                logType: .messageHistory)
                         } else {
                             messageTracker?.idToHistoryMessageMap[id] = currentChatMessage
                         }
@@ -530,6 +532,10 @@ final class MessageHolder {
                 if currentChatMessage.canBeEdited() {
                     currentChatMessage.setMessageCanBeEdited(messageCanBeEdited: false)
                     messageTracker?.messageListener?.changed(message: currentChatMessage, to: currentChatMessage)
+                    RoxchatInternalLogger.shared.log(
+                        entry: "Changing success.\nMessage \(currentChatMessage.getText()) changed to \(currentChatMessage.getText()) in MessageHolder - \(#function)",
+                        verbosityLevel: .verbose,
+                        logType: .messageHistory)
                 }
             }
         }
@@ -683,6 +689,10 @@ final class MessageHolder {
                 if replacementMessage != currentChatMessage {
                     messageTracker?.messageListener?.changed(message: currentChatMessage,
                                                              to: replacementMessage)
+                    RoxchatInternalLogger.shared.log(
+                        entry: "Changing success.\nMessage \(currentChatMessage.getText()) changed to \(replacementMessage.getText()) in MessageHolder - \(#function)",
+                        verbosityLevel: .verbose,
+                        logType: .messageHistory)
                 }
                 
                 currentChatMessages.remove(at: currentChatMessageIndex)

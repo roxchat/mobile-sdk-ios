@@ -81,12 +81,14 @@ struct KeyboardButtonItem {
         case id = "id"
         case text = "text"
         case config = "config"
+        case params = "params"
     }
     
     // MARK: - Properties
     private let id: String?
     private let text: String?
     private var config: ConfigurationItem?
+    private var params: ParamsItem?
     
     // MARK: - Initialization
     init?(jsonDictionary: [String: Any?]) {
@@ -104,6 +106,10 @@ struct KeyboardButtonItem {
         
         if let config = jsonDictionary[JSONField.config.rawValue] as? [String: Any?] {
             self.config = ConfigurationItem(jsonDictionary: config)
+        }
+        
+        if let params = jsonDictionary[JSONField.params.rawValue] as? [String: Any?] {
+            self.params = ParamsItem(jsonDictionary: params)
         }
     }
     
@@ -127,6 +133,10 @@ struct KeyboardButtonItem {
     
     func getConfiguration() -> ConfigurationItem? {
         return config
+    }
+    
+    func getParams() -> ParamsItem? {
+        return params
     }
     
 }
@@ -302,6 +312,63 @@ struct ConfigurationItem {
     
     func getButtonType() -> ButtonType {
         return type
+    }
+    
+}
+
+/**
+ */
+struct ParamsItem {
+    
+    // MARK: - Constants
+    // Raw values equal to field names received in responses from server.
+    private enum JSONField: String {
+        case type = "type"
+        case action = "action"
+        case color = "color"
+    }
+    
+    // MARK: - Properties
+    private var type: ParamsButtonType?
+    private var action: String?
+    private var color: String?
+    
+    // MARK: - Initialization
+    init?(jsonDictionary: [String: Any?]) {
+        if let action = jsonDictionary[JSONField.action.rawValue] as? String {
+            self.action = action
+        }
+        
+        if let color = jsonDictionary[JSONField.color.rawValue] as? String {
+            self.color = color
+        }
+        
+        if let type = jsonDictionary[JSONField.type.rawValue] as? String {
+            switch type {
+            case "url":
+                self.type = .url
+                break
+            case "action":
+                self.type = .action
+                break
+            default:
+                break
+            }
+        }
+    }
+    
+    // MARK: - Methods
+    
+    func getAction() -> String? {
+        return action
+    }
+    
+    func getType() -> ParamsButtonType? {
+        return type
+    }
+    
+    func getColor() -> String? {
+        return color
     }
     
 }

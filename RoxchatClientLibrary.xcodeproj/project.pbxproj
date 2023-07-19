@@ -22,6 +22,9 @@
 		11638EEE22A448830085E4F4 /* KeyboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11638EED22A448830085E4F4 /* KeyboardItem.swift */; };
 		1165DAA525D9F67700FBF72E /* LocationStatusResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1165DAA425D9F67700FBF72E /* LocationStatusResponse.swift */; };
 		11D5A33326D45E4A00AE290C /* LocationSettingsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D5A33226D45E4A00AE290C /* LocationSettingsResponse.swift */; };
+		11DD3B8C2A676D7F0071D0DB /* RoxchatAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DD3B8B2A676D7F0071D0DB /* RoxchatAlert.swift */; };
+		11DD3B8E2A676F240071D0DB /* RoxchatInternalAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DD3B8D2A676F240071D0DB /* RoxchatInternalAlert.swift */; };
+		11DD3B902A677ACC0071D0DB /* AccountConfigItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DD3B8F2A677ACC0071D0DB /* AccountConfigItem.swift */; };
 		11E2813222F60987000A1EA6 /* FAQSQLiteHistoryStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E2813122F60987000A1EA6 /* FAQSQLiteHistoryStorage.swift */; };
 		123D716F26D645F500F78A1E /* WMSynchronizedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D716E26D645F500F78A1E /* WMSynchronizedObject.swift */; };
 		1289E9752695BB3A007C15BF /* WMDataEncryptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1289E9742695BB39007C15BF /* WMDataEncryptor.swift */; };
@@ -140,6 +143,9 @@
 		11638EED22A448830085E4F4 /* KeyboardItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardItem.swift; sourceTree = "<group>"; };
 		1165DAA425D9F67700FBF72E /* LocationStatusResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationStatusResponse.swift; sourceTree = "<group>"; };
 		11D5A33226D45E4A00AE290C /* LocationSettingsResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSettingsResponse.swift; sourceTree = "<group>"; };
+		11DD3B8B2A676D7F0071D0DB /* RoxchatAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoxchatAlert.swift; sourceTree = "<group>"; };
+		11DD3B8D2A676F240071D0DB /* RoxchatInternalAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoxchatInternalAlert.swift; sourceTree = "<group>"; };
+		11DD3B8F2A677ACC0071D0DB /* AccountConfigItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountConfigItem.swift; sourceTree = "<group>"; };
 		11E2813122F60987000A1EA6 /* FAQSQLiteHistoryStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FAQSQLiteHistoryStorage.swift; sourceTree = "<group>"; };
 		123D716E26D645F500F78A1E /* WMSynchronizedObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WMSynchronizedObject.swift; sourceTree = "<group>"; };
 		1289E9742695BB39007C15BF /* WMDataEncryptor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WMDataEncryptor.swift; sourceTree = "<group>"; };
@@ -301,6 +307,7 @@
 				CEBF03992211F070001658D8 /* FAQCategoryInfo.swift */,
 				113C581B24EDE32F006A08C2 /* Survey.swift */,
 				113057A8256D209D004BB13E /* UploadedFile.swift */,
+				11DD3B8B2A676D7F0071D0DB /* RoxchatAlert.swift */,
 			);
 			path = RoxchatClientLibrary;
 			sourceTree = "<group>";
@@ -348,6 +355,7 @@
 				11E2813122F60987000A1EA6 /* FAQSQLiteHistoryStorage.swift */,
 				113C582224EF24D9006A08C2 /* SurveyController.swift */,
 				11474E6125F2A5AD00D560FB /* FileUrlCreator.swift */,
+				11DD3B8D2A676F240071D0DB /* RoxchatInternalAlert.swift */,
 			);
 			path = Backend;
 			sourceTree = "<group>";
@@ -385,6 +393,7 @@
 		8FD24482200CE25A007EB9CB /* Items */ = {
 			isa = PBXGroup;
 			children = (
+				11DD3B8F2A677ACC0071D0DB /* AccountConfigItem.swift */,
 				8FD24483200CE25A007EB9CB /* OperatorItem.swift */,
 				8FD24484200CE25A007EB9CB /* DepartmentItem.swift */,
 				8FD24485200CE25A007EB9CB /* RatingItem.swift */,
@@ -542,7 +551,9 @@
 				CE529807222EA38C00033278 /* HistoryRevisionItem.swift in Sources */,
 				8FD244BD200CE25C007EB9CB /* RemoteHistoryProvider.swift in Sources */,
 				8FD244AF200CE25C007EB9CB /* MessageTracker.swift in Sources */,
+				11DD3B8E2A676F240071D0DB /* RoxchatInternalAlert.swift in Sources */,
 				CEF33876221C74C700A7EA27 /* FAQCategoryInfoItem.swift in Sources */,
+				11DD3B902A677ACC0071D0DB /* AccountConfigItem.swift in Sources */,
 				113C581E24EE5892006A08C2 /* SurveyImpl.swift in Sources */,
 				8FD244E9200CE25C007EB9CB /* FatalErrorHandler.swift in Sources */,
 				8FD244C6200CE25C007EB9CB /* SessionDestroyer.swift in Sources */,
@@ -569,6 +580,7 @@
 				8FD244D3200CE25C007EB9CB /* OnlineStatusItem.swift in Sources */,
 				8FD244BF200CE25C007EB9CB /* String.swift in Sources */,
 				11E2813222F60987000A1EA6 /* FAQSQLiteHistoryStorage.swift in Sources */,
+				11DD3B8C2A676D7F0071D0DB /* RoxchatAlert.swift in Sources */,
 				8FD244CB200CE25C007EB9CB /* OperatorItem.swift in Sources */,
 				CE6A6986220C9DE200B11E29 /* FAQAccessChecker.swift in Sources */,
 				8FD244A8200CE25C007EB9CB /* RoxchatLogger.swift in Sources */,

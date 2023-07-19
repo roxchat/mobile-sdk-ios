@@ -17,7 +17,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
     }
     private enum ColumnName: String {
         // In DB columns order.
-        case id = "id"
+        case serverSideID = "id"
         case clientSideID = "client_side_id"
         case timestamp = "timestamp"
         case senderID = "sender_id"
@@ -38,7 +38,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
     private static let history = Table(TableName.history.rawValue)
     
     // In DB columns order.
-    private static let id = Expression<String>(ColumnName.id.rawValue)
+    private static let serverSideID = Expression<String>(ColumnName.serverSideID.rawValue)
     private static let clientSideID = Expression<String?>(ColumnName.clientSideID.rawValue)
     private static let timestamp = Expression<Int64>(ColumnName.timestamp.rawValue)
     private static let senderID = Expression<String?>(ColumnName.senderID.rawValue)
@@ -56,7 +56,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
     
     
     // MARK: - Properties
-    private static let queryQueue = DispatchQueue(label: "SQLiteHistoryStorageQueryQueue", qos: .background)
+    private static let queryQueue = DispatchQueue(label: "SQLiteHistoryStorageQueryQueue", qos: .utility)
     private let completionHandlerQueue: DispatchQueue
     private let serverURLString: String
     private let fileUrlCreator: FileUrlCreator
@@ -254,23 +254,24 @@ final class SQLiteHistoryStorage: HistoryStorage {
             var newFirstKnownTimeInMicrosecond = Int64.max
             
             for message in messages {
-                guard let messageHistorID = message.getHistoryID() else {
+                guard let messageHistoryID = message.getHistoryID() else {
                     continue
                 }
                 newFirstKnownTimeInMicrosecond = min(newFirstKnownTimeInMicrosecond,
-                                                     messageHistorID.getTimeInMicrosecond())
+                                                     messageHistoryID.getTimeInMicrosecond())
                 do {
                     /*
                      INSERT OR FAIL
                      INTO history
                      (id, timestamp_in_microsecond, sender_id, sender_name, avatar_url_string, type, text, data)
                      VALUES
-                     (message.getID(), messageHistorID.getTimeInMicrosecond(), message.getOperatorID(), message.getSenderName(), message.getSenderAvatarURLString(), MessageItem.MessageKind(messageType: message.getType()).rawValue, message.getRawText() ?? message.getText(), SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()), SQLiteHistoryStorage.convertToBlob(quote: message.getQuote()))
+                     (message.getID(), messageHistoryID.getTimeInMicrosecond(), message.getOperatorID(), message.getSenderName(), message.getSenderAvatarURLString(), MessageItem.MessageKind(messageType: message.getType()).rawValue, message.getRawText() ?? message.getText(), SQLiteHistoryStorage.convertToBlob(dictionary: message.getData()), SQLiteHistoryStorage.convertToBlob(quote: message.getQuote()))
                      */
                     let text = WMDataEncryptor.shared?.encryptToBase64String(text: (message.getRawText() ?? message.getText())) ?? "no data"
                     
                     let query: String = "INSERT OR FAIL INTO history ("
-                        + "\(SQLiteHistoryStorage.ColumnName.id.rawValue), "
+                        + "\(SQLiteHistoryStorage.ColumnName.serverSideID.rawValue), "
+                        + "\(SQLiteHistoryStorage.ColumnName.clientSideID.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.timestamp.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.senderID.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.senderName.rawValue), "
@@ -282,10 +283,11 @@ final class SQLiteHistoryStorage: HistoryStorage {
                         + "\(SQLiteHistoryStorage.ColumnName.quote.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.canVisitorReact.rawValue), "
                         + "\(SQLiteHistoryStorage.ColumnName.canVisitorChangeReaction.rawValue), "
-                        + "\(SQLiteHistoryStorage.ColumnName.reaction.rawValue)) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                        + "\(SQLiteHistoryStorage.ColumnName.reaction.rawValue)) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                     let statement = try db.prepare(query)
-                    try statement.run(message.getID(),
-                                      messageHistorID.getTimeInMicrosecond(),
+                    try statement.run(messageHistoryID.getDBid(),
+                                      message.getID(),
+                                      messageHistoryID.getTimeInMicrosecond(),
                                       message.getOperatorID(),
                                       message.getSenderName(),
                                       message.getSenderAvatarURLString(),
@@ -344,18 +346,18 @@ final class SQLiteHistoryStorage: HistoryStorage {
             var newFirstKnownTimestamp = Int64.max
             
             for message in messages {
-                guard let messageHistorID = message.getHistoryID() else {
+                guard let messageHistoryID = message.getHistoryID() else {
                     continue
                 }
                 
                 if ((self.firstKnownTimestamp != -1)
-                    && (messageHistorID.getTimeInMicrosecond() < self.firstKnownTimestamp))
+                    && (messageHistoryID.getTimeInMicrosecond() < self.firstKnownTimestamp))
                     && !self.reachedHistoryEnd {
                     continue
                 }
                 
                 newFirstKnownTimestamp = min(newFirstKnownTimestamp,
-                                             messageHistorID.getTimeInMicrosecond())
+                                             messageHistoryID.getTimeInMicrosecond())
                 
                 do {
                     try self.insert(message: message)
@@ -572,7 +574,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
          quote TEXT
          */
         _ = try? db.run(SQLiteHistoryStorage.history.create(ifNotExists: true) { t in
-            t.column(SQLiteHistoryStorage.id,
+            t.column(SQLiteHistoryStorage.serverSideID,
                      primaryKey: true)
             t.column(SQLiteHistoryStorage.clientSideID)
             t.column(SQLiteHistoryStorage.timestamp)
@@ -666,7 +668,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
     }
     
     private func createMessageBy(row: Row) -> MessageImpl {
-        let id = row[SQLiteHistoryStorage.id]
+        let id = row[SQLiteHistoryStorage.serverSideID]
         let clientSideID = row[SQLiteHistoryStorage.clientSideID]
         
         var rawText: String? = nil
@@ -713,14 +715,14 @@ final class SQLiteHistoryStorage: HistoryStorage {
             }
             let state: AttachmentState
             switch file?.getState() {
-            case .ready:
-                state = .ready
+            case .error:
+                state = .error
                 break
             case .externalChecks:
                 state = .externalChecks
                 break
             default:
-                state = .error
+                state = .ready
             }
             data = MessageDataImpl(attachment: MessageAttachmentImpl(fileInfo: attachment,
                                                                      filesInfo: attachments,
@@ -750,7 +752,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
         let reaction = row[SQLiteHistoryStorage.reaction] ?? nil
         
         return MessageImpl(serverURLString: serverURLString,
-                           id: (clientSideID ?? id),
+                           clientSideID: clientSideID ?? id,
                            serverSideID: id,
                            keyboard: keyboard,
                            keyboardRequest: keyboardRequest,
@@ -806,7 +808,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
         let text = WMDataEncryptor.shared?.encryptToBase64String(text: (message.getRawText() ?? message.getText())) ?? "no data"
         try db.run(SQLiteHistoryStorage
             .history
-            .insert(SQLiteHistoryStorage.id <- messageHistoryID.getDBid(),
+            .insert(SQLiteHistoryStorage.serverSideID <- messageHistoryID.getDBid(),
                     SQLiteHistoryStorage.clientSideID <- message.getID(),
                     SQLiteHistoryStorage.timestamp <- messageHistoryID.getTimeInMicrosecond(),
                     SQLiteHistoryStorage.senderID <- message.getOperatorID(),
@@ -851,7 +853,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
         let text = WMDataEncryptor.shared?.encryptToBase64String(text: (message.getRawText() ?? message.getText())) ?? "no data"
         try db.run(SQLiteHistoryStorage
             .history
-            .where(SQLiteHistoryStorage.id == messageHistoryID.getDBid())
+            .where(SQLiteHistoryStorage.serverSideID == messageHistoryID.getDBid())
             .update(SQLiteHistoryStorage.clientSideID <- message.getID(),
                     SQLiteHistoryStorage.timestamp <- messageHistoryID.getTimeInMicrosecond(),
                     SQLiteHistoryStorage.senderID <- message.getOperatorID(),
@@ -880,7 +882,7 @@ final class SQLiteHistoryStorage: HistoryStorage {
         }
         try db.run(SQLiteHistoryStorage
             .history
-            .where(SQLiteHistoryStorage.id == messageDBid)
+            .where(SQLiteHistoryStorage.serverSideID == messageDBid)
             .delete())
         
         db.trace {

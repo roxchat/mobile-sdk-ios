@@ -204,6 +204,11 @@ final class MessageTrackerImpl {
                 return
         }
         
+        let currentChatMessagesWithMessageID = messageHolder.getCurrentChatMessages().filter { $0.getID() == message.getID() }
+        guard currentChatMessagesWithMessageID.isEmpty else {
+            return
+        }
+        
         let previousMessage: MessageImpl? = idToHistoryMessageMap[messageHistoryID.getDBid()]
         if let previousMessage = previousMessage {
             idToHistoryMessageMap[messageHistoryID.getDBid()] = message
@@ -240,11 +245,19 @@ final class MessageTrackerImpl {
             if let beforeMessage = idToHistoryMessageMap[beforeID.getDBid()] {
                 messageListener?.added(message: message,
                                        after: beforeMessage)
+                RoxchatInternalLogger.shared.log(
+                    entry: "History. Adding message \'\(message.getText())\' after \'\(beforeMessage.getText())\'",
+                    verbosityLevel: .verbose,
+                    logType: .messageHistory)
             }
         } else {
             let currentChatMessages = messageHolder.getCurrentChatMessages()
             messageListener?.added(message: message,
                                    after: (currentChatMessages.isEmpty ? nil : currentChatMessages.last))
+            RoxchatInternalLogger.shared.log(
+                entry: "History. Adding message \'\(message.getText())\' after \'\(currentChatMessages.isEmpty ? "" : currentChatMessages.last?.getText() ?? "")\'",
+                verbosityLevel: .verbose,
+                logType: .messageHistory)
         }
         
         idToHistoryMessageMap[messageHistoryID.getDBid()] = message
@@ -323,8 +336,16 @@ final class MessageTrackerImpl {
                     let firstMessage = messagesToSend.first {
                     messageListener?.added(message: message,
                                             after: firstMessage)
+                    RoxchatInternalLogger.shared.log(
+                        entry: "Current chat. Adding message \'\(message.getText())\' after \'\(firstMessage.getText())\'",
+                        verbosityLevel: .verbose,
+                        logType: .messageHistory)
                 } else {
                     messageListener?.added(message: message, after: nil)
+                    RoxchatInternalLogger.shared.log(
+                        entry: "Current chat. Adding message \'\(message.getText())\'",
+                        verbosityLevel: .verbose,
+                        logType: .messageHistory)
                 }
             }
         }
@@ -336,10 +357,9 @@ final class MessageTrackerImpl {
                                           of messageHolder: MessageHolder) -> MessageToSend? {
         let messagesToSend = messageHolder.getMessagesToSend()
         
-        for i in 0..<messagesToSend.count {
-            if messagesToSend[i].getID() == message.getID() {
-                let messageToSend = messagesToSend[i]
-                messageHolder.removeFromMessagesToSendAt(index: i)
+        for (index, messageToSend) in messagesToSend.enumerated() {
+            if messageToSend.getID() == message.getID() {
+                messageHolder.removeFromMessagesToSendAt(index: index)
                 return messageToSend
             }
         }
@@ -481,22 +501,7 @@ extension MessageTrackerImpl: MessageTracker {
     func getLastMessages(byLimit limitOfMessages: Int,
                          completion: @escaping ([Message]) -> ()) throws {
         try messageHolder.checkAccess()
-        guard destroyed != true else {
-            RoxchatInternalLogger.shared.log(entry: "MessageTracker object is destroyed. Unable to perform request to get new messages.")
-            completion([Message]())
-            
-            return
-        }
-        guard messagesLoading != true else {
-            RoxchatInternalLogger.shared.log(entry: "Messages are already loading. Unable to perform a second request to get new messages.")
-            completion([Message]())
-            
-            return
-        }
-        guard limitOfMessages > 0 else {
-            RoxchatInternalLogger.shared.log(entry: "Limit of messages to perform request to get new messages must be greater that zero. Passed value – \(limitOfMessages).")
-            completion([Message]())
-            
+        guard canLoading(byLimitOfMessages: limitOfMessages, completion: completion) else {
             return
         }
         
@@ -513,26 +518,7 @@ extension MessageTrackerImpl: MessageTracker {
             
             cachedCompletionHandler = MessageHolderCompletionHandlerWrapper(completionHandler: wrappedCompletion)
             cachedLimit = limitOfMessages
-            
-            messageHolder.getHistoryStorage().getLatestHistory(byLimit: limitOfMessages) { [weak self] messages in
-                if let cachedCompletionHandler = self?.cachedCompletionHandler,
-                   !messages.isEmpty || self?.messageHolder.getReachedEndOfRemoteHistory() == true {
-                    self?.firstHistoryUpdateReceived = true
-                    
-                    let completionHandlerToPass = cachedCompletionHandler.getCompletionHandler()
-                    guard let messages = messages as? [MessageImpl] else {
-                        RoxchatInternalLogger.shared.log(entry: "Wrong messages type in MessageTrackerImpl.\(#function)")
-                        return
-                    }
-                    self?.receive(messages: messages,
-                                  limit: limitOfMessages,
-                                  completion: completionHandlerToPass)
-                    
-                    self?.cachedCompletionHandler = nil
-                    
-                    self?.messagesLoading = false
-                }
-            }
+            getLatestHistoryFromHistoryStorage(byLimit: limitOfMessages)
         } else {
             messagesLoading = true
             let result = Array(currentChatMessages.suffix(limitOfMessages))
@@ -547,22 +533,7 @@ extension MessageTrackerImpl: MessageTracker {
     func getNextMessages(byLimit limitOfMessages: Int,
                          completion: @escaping ([Message]) -> ()) throws {
         try messageHolder.checkAccess()
-        guard destroyed != true else {
-            RoxchatInternalLogger.shared.log(entry: "MessageTracker object is destroyed. Unable to perform request to get new messages.")
-            completion([Message]())
-            
-            return
-        }
-        guard messagesLoading != true else {
-            RoxchatInternalLogger.shared.log(entry: "Messages are already loading. Unable to perform a second request to get new messages.")
-            completion([Message]())
-            
-            return
-        }
-        guard limitOfMessages > 0 else {
-            RoxchatInternalLogger.shared.log(entry: "Limit of messages to perform request to get new messages must be greater that zero. Passed value – \(limitOfMessages).")
-            completion([Message]())
-            
+        guard canLoading(byLimitOfMessages: limitOfMessages, completion: completion) else {
             return
         }
         
@@ -580,26 +551,7 @@ extension MessageTrackerImpl: MessageTracker {
         } else {
             cachedCompletionHandler = MessageHolderCompletionHandlerWrapper(completionHandler: wrappedCompletion)
             cachedLimit = limitOfMessages
-            
-            messageHolder.getHistoryStorage().getLatestHistory(byLimit: limitOfMessages) { [weak self] messages in
-                if let cachedCompletionHandler = self?.cachedCompletionHandler,
-                   !messages.isEmpty || self?.messageHolder.getReachedEndOfRemoteHistory() == true {
-                    self?.firstHistoryUpdateReceived = true
-                    
-                    let completionHandlerToPass = cachedCompletionHandler.getCompletionHandler()
-                    guard let messages = messages as? [MessageImpl] else {
-                        RoxchatInternalLogger.shared.log(entry: "Wrong messages type in MessageTrackerImpl.\(#function)")
-                        return
-                    }
-                    self?.receive(messages: messages,
-                                  limit: limitOfMessages,
-                                  completion: completionHandlerToPass)
-                    
-                    self?.cachedCompletionHandler = nil
-                    
-                    self?.messagesLoading = false
-                }
-            }
+            getLatestHistoryFromHistoryStorage(byLimit: limitOfMessages)
         }
     }
     
@@ -621,14 +573,7 @@ extension MessageTrackerImpl: MessageTracker {
     
     func resetTo(message: Message) throws {
         try messageHolder.checkAccess()
-        guard destroyed != true else {
-            RoxchatInternalLogger.shared.log(entry: "MessageTracker object was destroyed. Unable to perform a request to reset to a message.")
-            
-            return
-        }
-        guard messagesLoading != true else {
-            RoxchatInternalLogger.shared.log(entry: "Messages is loading. Unable to perform a simultaneous request to reset to a message.")
-            
+        guard canLoading() else {
             return
         }
         
@@ -666,4 +611,47 @@ extension MessageTrackerImpl: MessageTracker {
         }
     }
     
+    private func canLoading(byLimitOfMessages limitOfMessages: Int = 1, completion: @escaping ([Message]) -> () = { _ in }) -> Bool {
+        guard destroyed != true else {
+            RoxchatInternalLogger.shared.log(entry: "MessageTracker object is destroyed. Unable to perform request to get new messages.")
+            completion([Message]())
+            
+            return false
+        }
+        guard messagesLoading != true else {
+            RoxchatInternalLogger.shared.log(entry: "Messages are already loading. Unable to perform a second request to get new messages.")
+            completion([Message]())
+            
+            return false
+        }
+        guard limitOfMessages > 0 else {
+            RoxchatInternalLogger.shared.log(entry: "Limit of messages to perform request to get new messages must be greater that zero. Passed value – \(limitOfMessages).")
+            completion([Message]())
+            
+            return false
+        }
+        return true
+    }
+    
+    private func getLatestHistoryFromHistoryStorage(byLimit limitOfMessages: Int) {
+        messageHolder.getHistoryStorage().getLatestHistory(byLimit: limitOfMessages) { [weak self] messages in
+            if let cachedCompletionHandler = self?.cachedCompletionHandler,
+               !messages.isEmpty || self?.messageHolder.getReachedEndOfRemoteHistory() == true {
+                self?.firstHistoryUpdateReceived = true
+                
+                let completionHandlerToPass = cachedCompletionHandler.getCompletionHandler()
+                guard let messages = messages as? [MessageImpl] else {
+                    RoxchatInternalLogger.shared.log(entry: "Wrong messages type in MessageTrackerImpl.\(#function)")
+                    return
+                }
+                self?.receive(messages: messages,
+                              limit: limitOfMessages,
+                              completion: completionHandlerToPass)
+                
+                self?.cachedCompletionHandler = nil
+                
+                self?.messagesLoading = false
+            }
+        }
+    }
 }

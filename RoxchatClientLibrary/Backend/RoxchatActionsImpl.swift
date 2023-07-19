@@ -30,11 +30,13 @@ final class RoxchatActionsImpl {
         case sendSticker = "sticker"
         case clearHistory = "chat.clear_history"
         case reaction = "chat.react_message"
+        case uploadFileProgress = "file_upload_progress"
     }
     
     // MARK: - Properties
     private let baseURL: String
     let actionRequestLoop: ActionRequestLoop
+    private var sendingFiles = [String: SendingFile]()
     
     // MARK: - Initialization
     init(baseURL: String,
@@ -42,6 +44,18 @@ final class RoxchatActionsImpl {
     ) {
         self.baseURL = baseURL
         self.actionRequestLoop = actionRequestLoop
+    }
+    
+    func getSendingFiles() -> [String: SendingFile] {
+        return sendingFiles
+    }
+    
+    func getSendingFile(id: String) -> SendingFile? {
+        return sendingFiles[id] ?? nil
+    }
+    
+    func deleteSendingFile(id: String) {
+        sendingFiles[id] = nil
     }
 }
 
@@ -90,6 +104,12 @@ extension RoxchatActionsImpl: RoxchatActions {
         
         let boundaryString = NSUUID().uuidString
         
+        let sendingFile = SendingFile(
+            fileName: filename,
+            clientSideId: clientSideID,
+            fileSize: Int(file.count)
+        )
+        sendingFiles[clientSideID] = sendingFile
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
                                                         messageID: clientSideID,
@@ -98,6 +118,69 @@ extension RoxchatActionsImpl: RoxchatActions {
                                                         fileData: file,
                                                         boundaryString: boundaryString,
                                                         contentType: (ContentType.multipartBody.rawValue + boundaryString),
+                                                        baseURLString: urlString,
+                                                        sendFileCompletionHandler: completionHandler,
+                                                        uploadFileToServerCompletionHandler: uploadFileToServerCompletionHandler))
+    }
+    
+    func sendFileProgress(fileSize: Int,
+                          filename: String,
+                          mimeType: String,
+                          clientSideID: String,
+                          error: SendFileError?,
+                          progress: Int?,
+                          state: SendFileProgressState,
+                          completionHandler: SendFileCompletionHandler? = nil,
+                          uploadFileToServerCompletionHandler: UploadFileToServerCompletionHandler? = nil) {
+        let pageId = self.actionRequestLoop.authorizationData?.getPageID() ?? ""
+        var dataToPost = [Parameter.actionn.rawValue: Action.uploadFileProgress.rawValue,
+                          Parameter.clientSideID.rawValue: clientSideID,
+                          Parameter.fileName.rawValue: filename,
+                          Parameter.fileSize.rawValue: fileSize.description,
+                          Parameter.fileState.rawValue: state.rawValue,
+                          Parameter.pageID.rawValue: pageId] as [String: Any]
+        var sendFileError: RoxchatInternalError? = nil
+        switch error {
+        case .fileSizeExceeded:
+            sendFileError = .fileSizeExceeded
+            break
+        case .fileSizeTooSmall:
+            sendFileError = .fileSizeTooSmall
+            break
+        case .fileTypeNotAllowed:
+            sendFileError = .fileTypeNotAllowed
+            break
+        case .maxFilesCountPerChatExceeded:
+            sendFileError = .uploadedFileNotFound
+            break
+        case .uploadedFileNotFound:
+            sendFileError = .unauthorized
+            break
+        default:
+            break
+        }
+        if let error = sendFileError {
+            dataToPost[Parameter.fileError.rawValue] = error.rawValue
+        }
+        
+        if let progress = progress {
+            dataToPost[Parameter.fileProgress.rawValue] = progress.description
+        }
+        
+        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        
+        let sendingFile = SendingFile(
+            fileName: filename,
+            clientSideId: clientSideID,
+            fileSize: fileSize
+        )
+        sendingFiles[clientSideID] = sendingFile
+        
+        actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
+                                                        primaryData: dataToPost,
+                                                        messageID: clientSideID,
+                                                        mimeType: mimeType,
+                                                        contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString,
                                                         sendFileCompletionHandler: completionHandler,
                                                         uploadFileToServerCompletionHandler: uploadFileToServerCompletionHandler))
@@ -487,7 +570,7 @@ extension RoxchatActionsImpl: RoxchatActions {
                                                         baseURLString: urlString))
     }
     
-    func getRawConfig(forLocation location: String, completion: @escaping (Data?) throws -> ()) {
+    func getServerSettings(forLocation location: String, completion: @escaping (Data?) throws -> ()) {
         let dataToPost = [String: Any]()
 
         let urlString = baseURL + ServerPathSuffix.getConfig.rawValue + "/\(location)"
@@ -497,6 +580,17 @@ extension RoxchatActionsImpl: RoxchatActions {
                                                         contentType: ContentType.urlEncoded.rawValue,
                                                         baseURLString: urlString,
                                                         locationSettingsCompletionHandler: completion))
+    }
+    
+    func autocomplete(forText text: String, url: String, completion: AutocompleteCompletionHandler?) {
+        let dataToPost = ["text": text]
+        
+        actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
+                                                        primaryData: dataToPost,
+                                                        contentType: ContentType.urlEncoded.rawValue,
+                                                        baseURLString: url,
+                                                        autocompleteCompletionHandler: completion),
+                                                        withAuthData: false)
     }
 
 

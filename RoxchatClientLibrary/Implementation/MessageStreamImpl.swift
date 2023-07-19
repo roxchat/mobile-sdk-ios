@@ -15,7 +15,9 @@ final class MessageStreamImpl {
     private let messageHolder: MessageHolder
     private let sendingMessageFactory: SendingFactory
     private let serverURLString: String
+    private let location: String
     private let roxchatActions: RoxchatActionsImpl
+    private var accountConfigResponse: AccountConfigItem?
     private var chat: ChatItem?
     private weak var chatStateListener: ChatStateListener?
     private var currentOperator: OperatorImpl?
@@ -45,6 +47,7 @@ final class MessageStreamImpl {
     
     // MARK: - Initialization
     init(serverURLString: String,
+         location: String,
          currentChatMessageFactoriesMapper: MessageMapper,
          sendingMessageFactory: SendingFactory,
          operatorFactory: OperatorFactory,
@@ -55,6 +58,7 @@ final class MessageStreamImpl {
          messageComposingHandler: MessageComposingHandler,
          locationSettingsHolder: LocationSettingsHolder) {
         self.serverURLString = serverURLString
+        self.location = location
         self.currentChatMessageFactoriesMapper = currentChatMessageFactoriesMapper
         self.sendingMessageFactory = sendingMessageFactory
         self.operatorFactory = operatorFactory
@@ -361,6 +365,10 @@ extension MessageStreamImpl: MessageStream {
         return publicState(ofChatState: lastChatState)
     }
     
+    func getChatId() -> Int? {
+        return chat?.getId()
+    }
+    
     func getUnreadByOperatorTimestamp() -> Date? {
         return unreadByOperatorTimestamp
     }
@@ -587,9 +595,6 @@ extension MessageStreamImpl: MessageStream {
         
         try startChat()
         
-        let messageID = ClientSideID.generateClientSideID()
-        messageHolder.sending(message: sendingMessageFactory.createFileMessageToSendWith(id: messageID))
-        
         if mimeType == "image/heic" || mimeType == "image/heif" {
             guard let image = UIImage(data: file),
                 let imageData = image.jpegData(compressionQuality: 0.5)
@@ -612,12 +617,25 @@ extension MessageStreamImpl: MessageStream {
             filename += ".jpeg"
         }
         
+        let messageID = ClientSideID.generateClientSideID()
+        let data = MessageDataImpl(attachment: MessageAttachmentImpl(fileInfo: FileInfoImpl(urlString: nil,
+                                                                                            size: Int64(file.count),
+                                                                                            filename: filename,
+                                                                                            contentType: mimeType,
+                                                                                            guid: nil,
+                                                                                            fileUrlCreator: nil),
+                                                                     filesInfo: [],
+                                                                     state: .upload))
+        messageHolder.sending(message: sendingMessageFactory.createFileMessageToSendWith(id: messageID, data: data))
+        
         roxchatActions.send(file: file,
                           filename: filename,
                           mimeType: mimeType,
                           clientSideID: messageID,
                           completionHandler: SendFileCompletionHandlerWrapper(sendFileCompletionHandler: completionHandler,
-                                                                              messageHolder: messageHolder),
+                                                                              messageHolder: messageHolder,
+                                                                              roxchatActions: roxchatActions,
+                                                                              sendingMessageFactory: sendingMessageFactory),
                           uploadFileToServerCompletionHandler: nil)
 
         RoxchatInternalLogger.shared.log(
@@ -777,16 +795,49 @@ extension MessageStreamImpl: MessageStream {
             logType: .networkRequest)
     }
     
+    func autocomplete(text: String, completionHandler: AutocompleteCompletionHandler?) throws {
+        try accessChecker.checkAccess()
+        
+        if accountConfigResponse == nil {
+            roxchatActions.getServerSettings(forLocation: location) {
+                data in
+                if let data = data {
+                    let json = try? JSONSerialization.jsonObject(with: data,
+                                                                 options: [])
+                    if let locationSettingsResponseDictionary = json as? [String: Any?] {
+                        let locationSettingsResponse = ServerSettingsResponse(jsonDictionary: locationSettingsResponseDictionary)
+                        self.accountConfigResponse = locationSettingsResponse.getAccountConfig()
+                        if let url = self.accountConfigResponse?.getHintsEndpoint() {
+                            self.roxchatActions.autocomplete(forText: text, url: url, completion: completionHandler)
+                        } else {
+                            completionHandler?.onFailure(error: .hintApiInvalid)
+                        }
+                    }
+                }
+            }
+        } else {
+            if let url = accountConfigResponse?.getHintsEndpoint() {
+                roxchatActions.autocomplete(forText: text, url: url, completion: completionHandler)
+            } else {
+                completionHandler?.onFailure(error: .hintApiInvalid)
+            }
+        }
+        RoxchatInternalLogger.shared.log(
+            entry: "Autocomplete request in MessageStreamImpl - \(#function)",
+            verbosityLevel: .verbose,
+            logType: .networkRequest)
+    }
+    
     func getRawConfig(forLocation location: String, completionHandler: RawLocationConfigCompletionHandler?) throws {
         try accessChecker.checkAccess()
         
-        roxchatActions.getRawConfig(forLocation: location) {
+        roxchatActions.getServerSettings(forLocation: location) {
             data in
             if let data = data {
                 let json = try? JSONSerialization.jsonObject(with: data,
                                                              options: [])
                 if let locationSettingsResponseDictionary = json as? [String: Any?] {
-                    let locationSettingsResponse = LocationSettingsResponse(jsonDictionary: locationSettingsResponseDictionary)
+                    let locationSettingsResponse = ServerSettingsResponse(jsonDictionary: locationSettingsResponseDictionary)
                     completionHandler?.onSuccess(rawLocationConfig: locationSettingsResponse.getLocationSettings())
                     RoxchatInternalLogger.shared.log(
                         entry: "Success get raw config in MessageStreamImpl- \(#function)",
@@ -937,19 +988,12 @@ extension MessageStreamImpl: MessageStream {
     func sendDialogTo(emailAddress: String,
                       completionHandler: SendDialogToEmailAddressCompletionHandler?) throws {
         try accessChecker.checkAccess()
-        if !lastChatState.isClosed() {
-            roxchatActions.sendDialogTo(emailAddress: emailAddress, completionHandler: completionHandler)
-            RoxchatInternalLogger.shared.log(
-                entry: "Request send dialog to email in MessageStreamImpl- \(#function)",
-                verbosityLevel: .verbose,
-                logType: .networkRequest)
-        } else {
-            completionHandler?.onFailure(error: .noChat)
-            RoxchatInternalLogger.shared.log(
-                entry: "Failure send dialog to mail.\nNo chat in MessageStreamImpl- \(#function)",
-                verbosityLevel: .verbose,
-                logType: .networkRequest)
-        }
+       
+        roxchatActions.sendDialogTo(emailAddress: emailAddress, completionHandler: completionHandler)
+        RoxchatInternalLogger.shared.log(
+            entry: "Request send dialog to email in MessageStreamImpl- \(#function)",
+            verbosityLevel: .verbose,
+            logType: .networkRequest)
     }
     
     func set(prechatFields: String) throws {
@@ -1117,13 +1161,78 @@ fileprivate final class SendFileCompletionHandlerWrapper: SendFileCompletionHand
     
     // MARK: - Properties
     private let messageHolder: MessageHolder
+    private let roxchatActions: RoxchatActionsImpl
+    private let sendingMessageFactory: SendingFactory
     private weak var sendFileCompletionHandler: SendFileCompletionHandler?
     
     // MARK: - Initialization
     init(sendFileCompletionHandler: SendFileCompletionHandler?,
-         messageHolder: MessageHolder) {
+         messageHolder: MessageHolder,
+         roxchatActions: RoxchatActionsImpl,
+         sendingMessageFactory: SendingFactory) {
         self.sendFileCompletionHandler = sendFileCompletionHandler
         self.messageHolder = messageHolder
+        self.roxchatActions = roxchatActions
+        self.sendingMessageFactory = sendingMessageFactory
+    }
+    
+    // MARK: - Methods
+    
+    func onSuccess(messageID: String) {
+        roxchatActions.deleteSendingFile(id: messageID)
+        sendFileCompletionHandler?.onSuccess(messageID: messageID)
+        RoxchatInternalLogger.shared.log(
+            entry: "File success sended with ID - \(messageID) in MessageStream",
+            verbosityLevel: .verbose,
+            logType: .networkRequest)
+    }
+    
+    func onFailure(messageID: String,
+                   error: SendFileError) {
+        RoxchatInternalLogger.shared.log(
+            entry: "File send failure with ID - \(messageID) in MessageStream",
+            verbosityLevel: .verbose,
+            logType: .networkRequest)
+        
+        guard let sendingFile = roxchatActions.getSendingFile(id: messageID) else {
+            messageHolder.sendingCancelledWith(messageID: messageID)
+            sendFileCompletionHandler?.onFailure(messageID: messageID, error: error)
+            return
+        }
+        let data = MessageDataImpl(attachment: MessageAttachmentImpl(fileInfo: FileInfoImpl(urlString: nil,
+                                                                                            size: Int64(sendingFile.fileSize),
+                                                                                            filename: sendingFile.fileName,
+                                                                                            contentType: nil,
+                                                                                            guid: nil,
+                                                                                            fileUrlCreator: nil),
+                                                                     filesInfo: [],
+                                                                     state: .error))
+    
+        messageHolder.changed(message: sendingMessageFactory.createFileMessageToSendWith(id: messageID, data: data))
+        roxchatActions.sendFileProgress(fileSize: sendingFile.fileSize,
+                                      filename: sendingFile.fileName,
+                                      mimeType: sendingFile.clientSideId,
+                                      clientSideID: sendingFile.clientSideId,
+                                      error: error,
+                                      progress: nil,
+                                      state: .error,
+                                      completionHandler: SendFileProgressCompletionHandlerWrapper(messageHolder: messageHolder,
+                                                                                                  sendFileCompletionHandler: sendFileCompletionHandler))
+        roxchatActions.deleteSendingFile(id: messageID)
+    }
+}
+
+fileprivate final class SendFileProgressCompletionHandlerWrapper: SendFileCompletionHandler {
+    
+    // MARK: - Properties
+    private let messageHolder: MessageHolder
+    private weak var sendFileCompletionHandler: SendFileCompletionHandler?
+    
+    // MARK: - Initialization
+    init(messageHolder: MessageHolder,
+         sendFileCompletionHandler: SendFileCompletionHandler?) {
+        self.messageHolder = messageHolder
+        self.sendFileCompletionHandler = sendFileCompletionHandler
     }
     
     // MARK: - Methods
@@ -1148,6 +1257,7 @@ fileprivate final class SendFileCompletionHandlerWrapper: SendFileCompletionHand
     }
     
 }
+
 
 fileprivate final class DataMessageCompletionHandlerWrapper: DataMessageCompletionHandler {
     
@@ -1239,7 +1349,7 @@ fileprivate final class DeleteMessageCompletionHandlerWrapper: DeleteMessageComp
     // MARK: - Methods
     
     func onSuccess(messageID: String) {
-        deleteMessageCompletionHandler?.onSuccess(messageID : messageID)
+        deleteMessageCompletionHandler?.onSuccess(messageID: messageID)
         RoxchatInternalLogger.shared.log(
             entry: "Success delete message with ID \(messageID)",
             verbosityLevel: .verbose,

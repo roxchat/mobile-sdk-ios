@@ -41,12 +41,12 @@ final class MessageItem {
     private var rawData: [String: Any?]?
     private var data: MessageData?
     private var deleted: Bool?
-    private var id: String?
     private var isEdited: Bool?
     private var kind: MessageKind?
     private var quote: QuoteItem?
     private var read: Bool?
     private var senderName: String?
+    private var serverSideID: String?
     private var text: String?
     private var timestampInMicrosecond: Int64 = -1
     private var timestampInSecond: Double?
@@ -97,7 +97,7 @@ final class MessageItem {
         }
         
         if let id = jsonDictionary[JSONField.id.rawValue] as? String {
-            self.id = id
+            self.serverSideID = id
         }
         
         if let quote = jsonDictionary[JSONField.quote.rawValue] as? [String: Any?] {
@@ -145,14 +145,14 @@ final class MessageItem {
     
     func getClientSideID() -> String? {
         if clientSideID == nil {
-            clientSideID = id
+            clientSideID = serverSideID
         }
         
         return clientSideID
     }
     
-    func getID() -> String? {
-        return id
+    func getServerSideID() -> String? {
+        return serverSideID
     }
     
     func getText() -> String? {
@@ -310,7 +310,7 @@ extension MessageItem: Equatable {
     // MARK: - Methods
     static func == (lhs: MessageItem,
                     rhs: MessageItem) -> Bool {
-        if (((lhs.id == rhs.id)
+        if (((lhs.serverSideID == rhs.serverSideID)
             && (lhs.clientSideID == rhs.clientSideID))
             && (lhs.timestampInSecond == rhs.timestampInSecond))
             && (lhs.text == rhs.text) {
@@ -564,4 +564,12 @@ final class FileItem {
             }
         }
     }
+}
+
+struct SendingFile {
+    
+    var fileName: String
+    var clientSideId: String
+    var fileSize: Int
+    
 }
