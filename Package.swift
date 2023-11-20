@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "roxchat-client-sdk-ios",
+    name: "mobile-sdk-ios",
     products: [
         .library(name: "RoxchatClientLibrary", targets: ["RoxchatClientLibrary"])
     ],
