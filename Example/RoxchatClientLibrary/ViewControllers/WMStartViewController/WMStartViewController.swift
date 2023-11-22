@@ -1,6 +1,7 @@
 
 import UIKit
 import RoxchatClientLibrary
+import RoxChatMobileWidget
 
 final class WMStartViewController: UIViewController {
     
@@ -8,6 +9,7 @@ final class WMStartViewController: UIViewController {
     private var unreadMessageCounter: Int = 0
     
     private lazy var alertDialogHandler = UIAlertHandler(delegate: self)
+    private lazy var visitorFieldsManager = WMVisitorFieldsManager()
     
     // MARK: - Outlets
     @IBOutlet var startChatButton: UIButton!
@@ -41,10 +43,11 @@ final class WMStartViewController: UIViewController {
         setupNavigationBarUpdater()
     }
     
-    @IBAction func startChat(_ sender: Any) {
-        _ = RoxchatServiceController.shared.createSession()
-        let dialogVC = ChatViewController.loadViewControllerFromXib()
-        self.navigationController?.pushViewController(dialogVC, animated: true)
+    @IBAction func startChat(_ sender: Any? = nil) {
+        presentChatViewController(
+            openFromNotification: sender == nil,
+            visitorData: visitorFieldsManager.getVisitorData(for: .currentVisitor)
+        )
     }
     
     // MARK: - Private methods
@@ -102,6 +105,21 @@ final class WMStartViewController: UIViewController {
                 self.unreadMessageCounterView.alpha = 0
             }
         }
+    }
+    
+    private func presentChatViewController(openFromNotification: Bool, visitorData: Data? = nil) {
+       RoxchatServiceController.currentSession.stopSession()
+        
+        let widget = ExternalWidgetBuilder().buildDefaultWidget(
+            remoteNotificationSystem: .apns,
+            visitorFieldsData: visitorData,
+            roxchatLogger: WidgetLogManager.shared,
+            roxchatLoggerVerbosityLevel: .debug,
+            availableLogTypes: [.manualCall,.messageHistory,.networkRequest,.undefined],
+            openFromNotification: openFromNotification
+        )
+        
+        self.navigationController?.pushViewController(widget, animated: true)
     }
     
     private func startRoxchatSession() {

@@ -124,9 +124,9 @@
 "Today" = "Today";
 "Unknown error" = "Unknown error";
 "Uploading file" = "Uploading file";
-"Roxchat Demo needs permission to access your camera so you can send photos to chat." = "Roxchat Demo needs permission to access your camera so you can send photos to chat.";
-"Roxchat demo-chat" = "Roxchat demo-chat";
-"Welcome to the RoxchatClientLibrary demo app!" = "Welcome to the Demo App of Roxchat Mobile SDK!";
+"Roxchat Demo needs permission to access your camera so you can send photos to chat." = "Rox.Chat Support needs permission to access your camera so you can send photos to chat.";
+"Rox.Chat Suppor " = "Rox.Chat Support";
+"Welcome to the Rox.Chat Support!" = "Welcome to the Rox.Chat Support!";
 "Wrong button ID in request" = "Wrong button ID in request";
 "Wrong message ID in request" = "Wrong message ID in request";
 "Wrong message kind (not text)" = "Wrong message kind (not text)";
@@ -141,7 +141,7 @@
 "wmtest" = "wmtest";
 "© 2022 Rox.chat Inc. All rights reserved." = "© 2022 Rox.chat Inc. All rights reserved.";
 "edited" = "edited";
-"Alert account name" = "Roxchat account name or full server address (for example, \"demo\" or \"https://demo.rox.chat\")";
+"Alert account name" = "Rox.Chat Support account name or full server address (for example, \"demo\" or \"https://demo.rox.chat\")";
 "Account" = "Account";
 "Location has invalid characters" = "Location has invalid characters.";
 "Image" = "Image";

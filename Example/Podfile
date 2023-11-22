@@ -5,6 +5,7 @@ use_frameworks!
 target 'RoxchatClientLibrary_Example' do
     
     pod 'RoxchatClientLibrary', :path => '../'
+    pod 'RoxChatmobileWidget', :path => '../../mobile-widget-ios'
     
     pod 'Cosmos', '~> 19.0.3', :inhibit_warnings => true
     pod 'Firebase/Crashlytics'

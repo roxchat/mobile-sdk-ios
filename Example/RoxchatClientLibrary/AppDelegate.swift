@@ -19,9 +19,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         AppDelegate.shared = self
         UNUserNotificationCenter.current().delegate = self
-        let rootVC = WMStartViewController.loadViewControllerFromXib()
-        let navigationController = UINavigationController(rootViewController: rootVC)
-        AppDelegate.shared.window?.rootViewController = navigationController
         // Remote notifications configuration
         let notificationTypes: UNAuthorizationOptions = [.alert,
                                                          .badge,
@@ -89,21 +86,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if Roxchat.isRoxchat(remoteNotification: notificationUserInfo) {
             _ = Roxchat.parse(remoteNotification: notificationUserInfo)
             // Handle Roxchat remote notification.
-            if let navigationController = UIApplication.shared.keyWindow?.rootViewController as? UINavigationController,
-               !isChatViewController(navigationController.viewControllers.last) {
+            guard !isChatIsTopViewController() else { return }
+
+            if let navigationController = UIApplication.shared.keyWindow?.rootViewController as? UINavigationController {
                 navigationController.popToRootViewController(animated: false)
-                if let startViewController = navigationController.viewControllers.first as? WMStartViewController {
-                    startViewController.startChatButton.sendActions(for: .touchUpInside)
-                }
+                guard let startViewController = navigationController.viewControllers.first as? WMStartViewController else { return }
+                startViewController.startChat()
             }
         } else {
             // Handle another type of remote notification.
         }
     }
 
-    private func isChatViewController(_ viewController: UIViewController?) -> Bool {
-        guard let viewController = viewController else { return false }
-        return viewController is ChatViewController
+    private func isChatIsTopViewController() -> Bool {
+        guard let navigationController = UIApplication.shared.keyWindow?.rootViewController as? UINavigationController else { return false }
+        return navigationController.viewControllers.last?.isChatViewController == true
     }
 }
 

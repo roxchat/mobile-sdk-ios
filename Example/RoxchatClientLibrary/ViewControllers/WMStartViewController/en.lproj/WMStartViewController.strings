@@ -6,7 +6,7 @@
 "fgX-wy-ZIA.accessibilityLabel" = "Greeting title";
 
 /* Class = "UILabel"; text = "Welcome to the RoxchatClientLibrary demo app!"; ObjectID = "fgX-wy-ZIA"; */
-"fgX-wy-ZIA.text" = "Welcome to the Demo App of Roxchat Mobile SDK!";
+"fgX-wy-ZIA.text" = "Welcome to the Rox.Chat Support!";
 
 /* Class = "UIButton"; accessibilityHint = "Shows settings."; ObjectID = "htJ-b1-n8p"; */
 "htJ-b1-n8p.accessibilityHint" = "Shows settings.";
