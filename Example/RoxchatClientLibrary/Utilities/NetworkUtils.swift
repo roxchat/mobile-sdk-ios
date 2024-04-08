@@ -14,7 +14,7 @@ struct InternalScheme: RawRepresentable {
 }
 
 struct InternalHost {
-    static let defaultHost = "demo.roxchat.ru"
+    static let defaultHost = "demo.rox.chat"
     static var currentHost: String {
         let host = Settings.shared.accountName
         if host.contains("https://") {

@@ -136,11 +136,16 @@ class ExternalWidgetBuilder {
             .font : UIFont.systemFont(ofSize: 16, weight: .regular),
             .foregroundColor : visitorMessageTextColour
         ]
+        let visitorConfigCorners: CACornerMask = !LocaleManager.isRightOrientationLocale() ?
+                                                [.layerMinXMinYCorner,
+                                                 .layerMaxXMinYCorner,
+                                                 .layerMinXMaxYCorner] :
+                                                [.layerMinXMinYCorner,
+                                                 .layerMaxXMinYCorner,
+                                                 .layerMaxXMaxYCorner]
         let textCellConfig = WMTextCellConfigBuilder()
             .set(backgroundColor: visitorMessageBubbleColour)
-            .set(roundCorners: [.layerMinXMinYCorner,
-                                .layerMaxXMinYCorner,
-                                .layerMinXMaxYCorner])
+            .set(roundCorners: visitorConfigCorners)
             .set(cornerRadius: 10)
             .set(subtitleAttributes: textCellSubtitleAttributes)
             .set(strokeWidth: 0)
@@ -177,9 +182,7 @@ class ExternalWidgetBuilder {
         ]
         let fileCellConfig = WMFileCellConfigBuilder()
             .set(backgroundColor: visitorMessageBubbleColour)
-            .set(roundCorners: [.layerMinXMinYCorner,
-                                .layerMaxXMinYCorner,
-                                .layerMinXMaxYCorner])
+            .set(roundCorners: visitorConfigCorners)
             .set(cornerRadius: 10)
             .set(titleAttributes: fileCellTitleAttributes)
             .set(subtitleAttributes: fileCellSubtitleAttributes)
@@ -223,11 +226,16 @@ class ExternalWidgetBuilder {
             .font : UIFont.systemFont(ofSize: 16, weight: .regular),
             .foregroundColor : operatorMessageTextColour
         ]
+        let operatorConfigCorners: CACornerMask = !LocaleManager.isRightOrientationLocale() ?
+                                                [.layerMinXMinYCorner,
+                                                 .layerMaxXMinYCorner,
+                                                 .layerMaxXMaxYCorner] :
+                                                [.layerMinXMinYCorner,
+                                                 .layerMaxXMinYCorner,
+                                                 .layerMinXMaxYCorner]
         let textCellConfig = WMTextCellConfigBuilder()
             .set(backgroundColor: operatorMessageBubbleColour)
-            .set(roundCorners: [.layerMinXMinYCorner,
-                                .layerMaxXMinYCorner,
-                                .layerMaxXMaxYCorner])
+            .set(roundCorners: operatorConfigCorners)
             .set(cornerRadius: 10)
             .set(titleAttributes: cellTitleAttributes)
             .set(subtitleAttributes: textCellSubtitleAttributes)
@@ -256,9 +264,7 @@ class ExternalWidgetBuilder {
         ]
         let fileCellConfig = WMFileCellConfigBuilder()
             .set(backgroundColor: operatorMessageBubbleColour)
-            .set(roundCorners: [.layerMinXMinYCorner,
-                                .layerMaxXMinYCorner,
-                                .layerMaxXMaxYCorner])
+            .set(roundCorners: operatorConfigCorners)
             .set(cornerRadius: 10)
             .set(titleAttributes: cellTitleAttributes)
             .set(subtitleAttributes: fileCellSubtitleAttribute)
@@ -387,7 +393,7 @@ class ExternalWidgetBuilder {
             .set(textColorOfflineState: navigationBarTintColour)
             .set(logoImage: navigationBarTitleImageViewImage)
             .set(canShowTypingIndicator: true)
-            .set(typingLabelText: "typing")
+            .set(typingLabelText: "typing".localized)
             .build()
 
         let chatConfig = WMChatViewControllerConfigBuilder()

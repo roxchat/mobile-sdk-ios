@@ -52,6 +52,7 @@ PODS:
     - GoogleUtilities/Environment (~> 7.7)
     - GoogleUtilities/UserDefaults (~> 7.7)
     - PromisesObjC (~> 2.1)
+  - FLAnimatedImage (1.0.17)
   - GoogleAppMeasurement (9.6.0):
     - GoogleAppMeasurement/AdIdSupport (= 9.6.0)
     - GoogleUtilities/AppDelegateSwizzler (~> 7.7)
@@ -104,6 +105,11 @@ PODS:
   - PromisesObjC (2.2.0)
   - RoxchatClientLibrary (3.0.3):
     - SQLite.swift (= 0.13.3)
+  - RoxChatMobileWidget (1.0.0):
+    - Cosmos (~> 19.0.3)
+    - FLAnimatedImage (~> 1.0)
+    - Nuke (~> 8.0)
+    - SnapKit
   - SlackTextViewController (1.9.6)
   - SnapKit (5.6.0)
   - SQLite.swift (0.13.3):
@@ -116,6 +122,7 @@ DEPENDENCIES:
   - Firebase/Crashlytics
   - Nuke (~> 8.0)
   - RoxchatClientLibrary (from `../`)
+  - RoxChatMobileWidget (from `../../mobile-widget-ios`)
   - SlackTextViewController
   - SnapKit
   - SQLite.swift (= 0.13.3)
@@ -130,6 +137,7 @@ SPEC REPOS:
     - FirebaseCoreInternal
     - FirebaseCrashlytics
     - FirebaseInstallations
+    - FLAnimatedImage
     - GoogleAppMeasurement
     - GoogleDataTransport
     - GoogleUtilities
@@ -143,6 +151,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   RoxchatClientLibrary:
     :path: "../"
+  RoxChatMobileWidget:
+    :path: "../../mobile-widget-ios"
 
 SPEC CHECKSUMS:
   Cosmos: a6fb17284281fa12cf4c85c2efecd440a215ec44
@@ -153,17 +163,19 @@ SPEC CHECKSUMS:
   FirebaseCoreInternal: bca76517fe1ed381e989f5e7d8abb0da8d85bed3
   FirebaseCrashlytics: 3210572ddb77801e5a0bd9d7bc890769f2066a0c
   FirebaseInstallations: 0a115432c4e223c5ab20b0dbbe4cbefa793a0e8e
+  FLAnimatedImage: bbf914596368867157cc71b38a8ec834b3eeb32b
   GoogleAppMeasurement: 6de2b1a69e4326eb82ee05d138f6a5cb7311bcb1
   GoogleDataTransport: f0308f5905a745f94fb91fea9c6cbaf3831cb1bd
   GoogleUtilities: 9aa0ad5a7bc171f8bae016300bfcfa3fb8425749
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
   Nuke: d780e3507a86b86c589ab3cc5cd302d5456f06fb
   PromisesObjC: 09985d6d70fbe7878040aa746d78236e6946d2ef
-  RoxchatClientLibrary: e1d78358267c3ca1ba138ad04dfe1436d15b7553
+  RoxchatClientLibrary: 8d9609445ebbfbaddb79cf43706199ed2de643aa
+  RoxChatMobileWidget: c4cc87c681e03a718a9e3f5648d64b99549ec81c
   SlackTextViewController: b854e62c1c156336bc4fd409c6ca79b5773e8f9d
   SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
   SQLite.swift: 903bfa3bc9ab06345fdfbb578e34f47cfcf417da
 
-PODFILE CHECKSUM: 5bad850dc5ea313891b3acef1212f26853767b4f
+PODFILE CHECKSUM: 452de4f02c3f6bac1e38ded58b2f2dd6e73baf51
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.13.0

@@ -2,6 +2,7 @@
 import UIKit
 import RoxchatClientLibrary
 import RoxChatMobileWidget
+import FLAnimatedImage
 
 final class WMStartViewController: UIViewController {
     
@@ -21,6 +22,9 @@ final class WMStartViewController: UIViewController {
     @IBOutlet var unreadMessageCounterLabel: UILabel!
     @IBOutlet var unreadMessageCounterActivity: UIActivityIndicatorView!
     
+    @IBOutlet var startConstraint: NSLayoutConstraint!
+    @IBOutlet var logoConstraint: NSLayoutConstraint!
+    
     // MARK: - View Life Cycle
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -37,10 +41,30 @@ final class WMStartViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        checkOrientation()
         setupStartChatButton()
         setupSettingsButton()
         setupLogoTapGestureRecognizer()
         setupNavigationBarUpdater()
+        updateMessageCounter()
+        updateNavigationBar()
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        self.checkOrientation()
+    }
+    
+    private func checkOrientation() {
+        DispatchQueue.main.async {
+            let orientation = UIApplication.shared.windows
+                .first?
+                .windowScene?
+                .interfaceOrientation
+                .isLandscape ?? false
+            self.startConstraint.constant = orientation ? 20 : 50
+            self.logoConstraint.constant = orientation ? -10 : 30
+        }
     }
     
     @IBAction func startChat(_ sender: Any? = nil) {
@@ -134,7 +158,7 @@ final class WMStartViewController: UIViewController {
     }
 
     private func updateNavigationBar() {
-        NavigationBarUpdater.shared.set(isNavigationBarVisible: false)
+        NavigationBarUpdater.shared.set(isNavigationBarVisible: true)
     }
     
     @IBAction func openSettings() {

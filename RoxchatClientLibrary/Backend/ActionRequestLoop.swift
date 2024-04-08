@@ -9,6 +9,7 @@ class ActionRequestLoop: AbstractRequestLoop {
     // MARK: - Properties
     var actionOperationQueue: OperationQueue?
     var historyRequestOperationQueue: OperationQueue?
+    private var roxchatServerSideSettings: RoxchatServerSideSettings?
     @WMSynchronized var authorizationData: AuthorizationData?
     
     
@@ -51,6 +52,10 @@ class ActionRequestLoop: AbstractRequestLoop {
     
     func set(authorizationData: AuthorizationData?) {
         self.authorizationData = authorizationData
+    }
+    
+    func getRoxchatServerSideSettings() -> RoxchatServerSideSettings? {
+        return roxchatServerSideSettings
     }
     
     func enqueue(request: RoxchatRequest, withAuthData: Bool = true) {
@@ -117,6 +122,18 @@ class ActionRequestLoop: AbstractRequestLoop {
                 }
             } catch let unknownError as UnknownError {
                 self.handleRequestLoop(error: unknownError)
+                if let sendFileCompletionHandler = request.getSendFileCompletionHandler() {
+                    guard let messageID = request.getMessageID() else {
+                        RoxchatInternalLogger.shared.log(
+                            entry: "Request has not message ID in ActionRequestLoop.\(#function)",
+                            logType: .networkRequest)
+                        return
+                    }
+                    self.completionHandlerExecutor?.execute(task: DispatchWorkItem {
+                        sendFileCompletionHandler.onFailure(messageID: messageID,
+                                                            error: .uploadCanceled)
+                    })
+                }
             } catch {
                 RoxchatInternalLogger.shared.log(
                     entry: "Request failed with unknown error: \(request.getBaseURLString()).",
@@ -374,6 +391,7 @@ class ActionRequestLoop: AbstractRequestLoop {
             self.completionHandlerExecutor?.execute(task: DispatchWorkItem {
                 do {
                     let roxchatServerSideSettings = try self.decodeToServerSideSettings(data: data)
+                    self.roxchatServerSideSettings = roxchatServerSideSettings
                     completionHandler.onSuccess(roxchatServerSideSettings: roxchatServerSideSettings)
                 } catch {
                     completionHandler.onFailure()

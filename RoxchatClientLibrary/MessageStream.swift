@@ -1901,6 +1901,8 @@ public enum SendFileError: Error {
     */
     case unauthorized
     
+    case uploadCanceled
+    
 }
 
 public enum SendFilesError: Error {

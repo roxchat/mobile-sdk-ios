@@ -1,0 +1,54 @@
+//WMSettingsViewController.swift,WMSettingsViewController.xib
+"* Account name can't be empty." = "* Името на акаунта не може да бъде празно.";
+//WMSettingsViewController.swift,WMSettingsViewController.xib
+"* Location can't be empty." = "* Местоположението не може да бъде празно.";
+//WMSettingsViewController.swift,WMSettingsViewController.xib
+"Error" = "Грешка";
+//UIAlertHandler.swift
+"Account" = "Акаунт";
+//WMSettingsViewController.swift
+"Account name has invalid characters" = "Името на акаунта съдържа невалидни символи.";
+"AccountBlocked" = "Акаунтът, използван за създаване на сесия, е блокиран. Моля, свържете се с поддръжката на Rox.Chat или използвайте друг.";
+//UIAlertHandler.swift
+"Alert account name" = "Името на акаунта на Rox.Chat или пълният адрес на сървъра (например \"demo\" или \"https://demo.rox.chat\")";
+//UIAlertHandler.swift
+"Cancel" = "Отказ";
+//ConnectionErrorView.xib
+"Connection error" = "Грешка във връзката";
+//UIAlertHandler.swift
+"InvalidSettings" = "Невалидни настройки на акаунта";
+//WMSettingsViewController.swift
+"Location has invalid characters" = "Местоположението съдържа невалидни символи.";
+//AdditionalKeys.swift
+"P.CR" = "Агентът поиска вашите контактни данни.";
+//AdditionalKeys.swift
+"P.OA" = "Агент %@ беше определен за вашия заявка.";
+//AdditionalKeys.swift
+"P.OF" = "%@ изпрати файл: %@.";
+//AdditionalKeys.swift
+"P.OM" = "%@ написа съобщение: %@";
+//AdditionalKeys.swift
+"P.RO" = "Оценете агента.";
+//StringConstants.swift
+"Copy" = "Копиране";
+//StringConstants.swift
+"Delete" = "Изтриване";
+//StringConstants.swift
+"Reply" = "Отговор";
+//WMStartViewController.xib
+"Welcome to the RoxchatClientLibrary app!" = "Добре дошли в приложението за чат на Rox.Chat!";
+//WMThanksAlertView.xib
+"Your feedback will help us become better." = "Вашият отзив ще ни помогне да станем по-добри.";
+"Your visitor account is in the black list." = "Вашият акаунт на посетител е в черния списък.";
+//WMSettingsViewController.swift
+"Parse demo visitor error." = "Грешка при анализа на демонстрационен посетител.";
+//ChatViewController+CompletionHandler.swift,UIAlertHandler.swift
+"Session creation failed" = "Създаването на сесия неуспешно";
+//ChatViewController+Listener.swift
+"typing" = "пише";
+//StringConstants.swift
+"Edit" = "Редактиране";
+"Enter message" = "Въведете съобщение";
+"Please rate the overall impression of the consultation" = "Моля, оценете общия впечатление от консултацията.";
+"Rate Operator" = "Оцени агента";
+"Send" = "Изпращане";

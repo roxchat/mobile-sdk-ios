@@ -1,0 +1,54 @@
+//WMSettingsViewController.swift, WMSettingsViewController.xib
+"* Account name can't be empty." = "* El nombre de la cuenta no puede estar vacío.";
+//WMSettingsViewController.swift, WMSettingsViewController.xib
+"* Location can't be empty." = "* La ubicación no puede estar vacía.";
+//WMSettingsViewController.swift, WMSettingsViewController.xib
+"Error" = "Error";
+//UIAlertHandler.swift
+"Account" = "Conta";
+//WMSettingsViewController.swift
+"Account name has invalid characters" = "El nombre de la cuenta tiene caracteres no válidos.";
+"AccountBlocked" = "La cuenta que se utiliza para crear la sesión está bloqueada. Por favor, póngase en contacto con el soporte de Rox.Chat o utilice otra.";
+//UIAlertHandler.swift
+"Alert account name" = "Nombre de la cuenta Rox.Chat o dirección completa del servidor (por ejemplo, \"demo\" o \"https://demo.rox.chat\")";
+//UIAlertHandler.swift
+"Cancel" = "Cancelar";
+//ConnectionErrorView.xib
+"Connection error" = "Error de conexión";
+//UIAlertHandler.swift
+"InvalidSettings" = "Configuración de cuenta no válida";
+//WMSettingsViewController.swift
+"Location has invalid characters" = "La ubicación tiene caracteres no válidos.";
+//AdditionalKeys.swift
+"P.CR" = "Un agente solicitó sus datos de contacto.";
+//AdditionalKeys.swift
+"P.OA" = "El agente %@ fue asignado a su solicitud.";
+//AdditionalKeys.swift
+"P.OF" = "%@ envió un archivo: %@.";
+//AdditionalKeys.swift
+"P.OM" = "%@ escribió un mensaje: %@";
+//AdditionalKeys.swift
+"P.RO" = "Califica al agente.";
+//StringConstants.swift
+"Copy" = "Copiar";
+//StringConstants.swift
+"Delete" = "Eliminar";
+//StringConstants.swift
+"Reply" = "Responder";
+//WMStartViewController.xib
+"Welcome to the RoxchatClientLibrary app!" = "¡Bienvenido a la aplicación de chat Rox.Chat!";
+//WMThanksAlertView.xib
+"Your feedback will help us become better." = "Tu retroalimentación nos ayudará a mejorar.";
+"Your visitor account is in the black list." = "Tu cuenta de visitante está en la lista negra.";
+//WMSettingsViewController.swift
+"Parse demo visitor error." = "Error al analizar el visitante de demostración.";
+//ChatViewController+CompletionHandler.swift,UIAlertHandler.swift
+"Session creation failed" = "Fallo al crear la sesión";
+//ChatViewController+Listener.swift
+"typing" = "escribiendo";
+//StringConstants.swift
+"Edit" = "Editar";
+"Enter message" = "Escribe un mensaje";
+"Please rate the overall impression of the consultation" = "Por favor califica la impresión general de la consulta.";
+"Rate Operator" = "Calificar agente";
+"Send" = "Enviar";

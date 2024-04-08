@@ -14,6 +14,9 @@ class MessageMapper {
     // MARK: - Properties
     private let serverURLString: String
     private var fileUrlCreator: FileUrlCreator?
+    private var accountConfig: AccountConfigItem?
+    private var roxchatClient: RoxchatClient?
+    private var location: String?
     
     // MARK: - Initialization
     init(withServerURLString serverURLString: String) {
@@ -238,6 +241,10 @@ class MessageMapper {
     
     func set(fileUrlCreator: FileUrlCreator) {
         self.fileUrlCreator = fileUrlCreator
+    }
+    
+    func set(accountConfig: AccountConfigItem?) {
+        self.accountConfig = accountConfig
     }
     
     func mapAll(messages: [MessageItem]) -> [MessageImpl] {

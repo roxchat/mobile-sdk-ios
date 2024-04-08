@@ -29,8 +29,9 @@
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		900337D527D8A3FE000EFBEC /* UIActivityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 900337D427D8A3FE000EFBEC /* UIActivityType.swift */; };
 		90038C96279629BE000267B9 /* NSRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90038C95279629BE000267B9 /* NSRange.swift */; };
+		907106102BC46E19000431A5 /* RoxchatClientLibrary in Frameworks */ = {isa = PBXBuildFile; productRef = 9071060F2BC46E19000431A5 /* RoxchatClientLibrary */; };
+		907106132BC46E4E000431A5 /* RoxChatMobileWidget in Frameworks */ = {isa = PBXBuildFile; productRef = 907106122BC46E4E000431A5 /* RoxChatMobileWidget */; };
 		907869D3286B063000FC09A1 /* RoxchatServerSideSettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907869D2286B063000FC09A1 /* RoxchatServerSideSettingsManager.swift */; };
-		908FB1A22B0E232E000A1A50 /* RoxChatMobileWidget in Frameworks */ = {isa = PBXBuildFile; productRef = 908FB1A12B0E232E000A1A50 /* RoxChatMobileWidget */; };
 		908FB1A42B0E2360000A1A50 /* ExternalWidgetBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908FB1A32B0E2360000A1A50 /* ExternalWidgetBuilder.swift */; };
 		908FB1A62B0E2AE7000A1A50 /* WMVisitorFieldsParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908FB1A52B0E2AE7000A1A50 /* WMVisitorFieldsParser.swift */; };
 		908FB1A82B0E2B2B000A1A50 /* WMVisitorFieldsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908FB1A72B0E2B2B000A1A50 /* WMVisitorFieldsManager.swift */; };
@@ -97,6 +98,36 @@
 		607FACDC1AFB9204008FA782 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		900337D427D8A3FE000EFBEC /* UIActivityType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIActivityType.swift; sourceTree = "<group>"; };
 		90038C95279629BE000267B9 /* NSRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRange.swift; sourceTree = "<group>"; };
+		907105102BC42479000431A5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/WMStartViewController.strings; sourceTree = "<group>"; };
+		907105112BC42479000431A5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/WMSettingsViewController.strings; sourceTree = "<group>"; };
+		907105122BC42479000431A5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = ar; path = ar.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		907105132BC42479000431A5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = ar; path = ar.lproj/LaunchScreenController.storyboard; sourceTree = "<group>"; };
+		907105142BC42479000431A5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
+		907105152BC42484000431A5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/WMStartViewController.strings; sourceTree = "<group>"; };
+		907105162BC42484000431A5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/WMSettingsViewController.strings; sourceTree = "<group>"; };
+		907105172BC42484000431A5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = es; path = es.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		907105182BC42485000431A5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = es; path = es.lproj/LaunchScreenController.storyboard; sourceTree = "<group>"; };
+		907105192BC42485000431A5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		9071051A2BC424B0000431A5 /* bg */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = bg; path = bg.lproj/WMStartViewController.strings; sourceTree = "<group>"; };
+		9071051B2BC424B0000431A5 /* bg */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = bg; path = bg.lproj/WMSettingsViewController.strings; sourceTree = "<group>"; };
+		9071051C2BC424B0000431A5 /* bg */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = bg; path = bg.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		9071051D2BC424B0000431A5 /* bg */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = bg; path = bg.lproj/LaunchScreenController.storyboard; sourceTree = "<group>"; };
+		9071051E2BC424B0000431A5 /* bg */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = bg; path = bg.lproj/Localizable.strings; sourceTree = "<group>"; };
+		9071051F2BC424D0000431A5 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/WMStartViewController.strings; sourceTree = "<group>"; };
+		907105202BC424D0000431A5 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/WMSettingsViewController.strings; sourceTree = "<group>"; };
+		907105212BC424D0000431A5 /* he */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = he; path = he.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		907105222BC424D0000431A5 /* he */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = he; path = he.lproj/LaunchScreenController.storyboard; sourceTree = "<group>"; };
+		907105232BC424D0000431A5 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
+		907105242BC424E5000431A5 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/WMStartViewController.strings; sourceTree = "<group>"; };
+		907105252BC424E5000431A5 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/WMSettingsViewController.strings; sourceTree = "<group>"; };
+		907105262BC424E5000431A5 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = pt; path = pt.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		907105272BC424E5000431A5 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = pt; path = pt.lproj/LaunchScreenController.storyboard; sourceTree = "<group>"; };
+		907105282BC424E5000431A5 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
+		907105292BC424F4000431A5 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/WMStartViewController.strings; sourceTree = "<group>"; };
+		9071052A2BC424F4000431A5 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/WMSettingsViewController.strings; sourceTree = "<group>"; };
+		9071052B2BC424F4000431A5 /* uk */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = uk; path = uk.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		9071052C2BC424F4000431A5 /* uk */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = uk; path = uk.lproj/LaunchScreenController.storyboard; sourceTree = "<group>"; };
+		9071052D2BC424F4000431A5 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		907869D2286B063000FC09A1 /* RoxchatServerSideSettingsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RoxchatServerSideSettingsManager.swift; sourceTree = "<group>"; };
 		9083159427F1AC2400774EE0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/WMSettingsViewController.strings; sourceTree = "<group>"; };
 		908FB1A32B0E2360000A1A50 /* ExternalWidgetBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalWidgetBuilder.swift; sourceTree = "<group>"; };
@@ -150,7 +181,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				908FB1A22B0E232E000A1A50 /* RoxChatMobileWidget in Frameworks */,
+				907106132BC46E4E000431A5 /* RoxChatMobileWidget in Frameworks */,
+				907106102BC46E19000431A5 /* RoxchatClientLibrary in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,7 +411,8 @@
 			);
 			name = RoxchatClientLibrary_Example;
 			packageProductDependencies = (
-				908FB1A12B0E232E000A1A50 /* RoxChatMobileWidget */,
+				9071060F2BC46E19000431A5 /* RoxchatClientLibrary */,
+				907106122BC46E4E000431A5 /* RoxChatMobileWidget */,
 			);
 			productName = RoxchatClientLibrary;
 			productReference = 607FACD01AFB9204008FA782 /* RoxchatClientLibrary_Example.app */;
@@ -397,6 +430,7 @@
 				TargetAttributes = {
 					607FACCF1AFB9204008FA782 = {
 						CreatedOnToolsVersion = 6.3.1;
+						DevelopmentTeam = NHV62264UD;
 						LastSwiftMigration = 0900;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
@@ -414,10 +448,17 @@
 			knownRegions = (
 				en,
 				Base,
+				ar,
+				es,
+				bg,
+				he,
+				pt,
+				uk,
 			);
 			mainGroup = 607FACC71AFB9204008FA782;
 			packageReferences = (
-				908FB1A02B0E232E000A1A50 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */,
+				9071060E2BC46E19000431A5 /* XCRemoteSwiftPackageReference "mobile-sdk-ios" */,
+				907106112BC46E4E000431A5 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */,
 			);
 			productRefGroup = 607FACD11AFB9204008FA782 /* Products */;
 			projectDirPath = "";
@@ -549,6 +590,12 @@
 			children = (
 				12ADB881278D753900EC2B1F /* Base */,
 				9083159427F1AC2400774EE0 /* en */,
+				907105112BC42479000431A5 /* ar */,
+				907105162BC42484000431A5 /* es */,
+				9071051B2BC424B0000431A5 /* bg */,
+				907105202BC424D0000431A5 /* he */,
+				907105252BC424E5000431A5 /* pt */,
+				9071052A2BC424F4000431A5 /* uk */,
 			);
 			name = WMSettingsViewController.xib;
 			sourceTree = "<group>";
@@ -558,6 +605,12 @@
 			children = (
 				90BC0496279A040B0081A75F /* Base */,
 				90BC0499279A045F0081A75F /* en */,
+				907105102BC42479000431A5 /* ar */,
+				907105152BC42484000431A5 /* es */,
+				9071051A2BC424B0000431A5 /* bg */,
+				9071051F2BC424D0000431A5 /* he */,
+				907105242BC424E5000431A5 /* pt */,
+				907105292BC424F4000431A5 /* uk */,
 			);
 			name = WMStartViewController.xib;
 			sourceTree = "<group>";
@@ -567,6 +620,12 @@
 			children = (
 				CE9379091FEAADC80057E270 /* Base */,
 				12ADB87A278D749C00EC2B1F /* en */,
+				907105142BC42479000431A5 /* ar */,
+				907105192BC42485000431A5 /* es */,
+				9071051E2BC424B0000431A5 /* bg */,
+				907105232BC424D0000431A5 /* he */,
+				907105282BC424E5000431A5 /* pt */,
+				9071052D2BC424F4000431A5 /* uk */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -575,6 +634,12 @@
 			isa = PBXVariantGroup;
 			children = (
 				DDC7924C23573D9300AF424F /* en */,
+				907105132BC42479000431A5 /* ar */,
+				907105182BC42485000431A5 /* es */,
+				9071051D2BC424B0000431A5 /* bg */,
+				907105222BC424D0000431A5 /* he */,
+				907105272BC424E5000431A5 /* pt */,
+				9071052C2BC424F4000431A5 /* uk */,
 			);
 			name = LaunchScreenController.storyboard;
 			sourceTree = "<group>";
@@ -583,6 +648,12 @@
 			isa = PBXVariantGroup;
 			children = (
 				DDC7924B23573D8700AF424F /* en */,
+				907105122BC42479000431A5 /* ar */,
+				907105172BC42484000431A5 /* es */,
+				9071051C2BC424B0000431A5 /* bg */,
+				907105212BC424D0000431A5 /* he */,
+				907105262BC424E5000431A5 /* pt */,
+				9071052B2BC424F4000431A5 /* uk */,
 			);
 			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
@@ -781,7 +852,15 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		908FB1A02B0E232E000A1A50 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */ = {
+		9071060E2BC46E19000431A5 /* XCRemoteSwiftPackageReference "mobile-sdk-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/roxchat/mobile-sdk-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.4;
+			};
+		};
+		907106112BC46E4E000431A5 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/roxchat/mobile-widget-ios";
 			requirement = {
@@ -792,9 +871,14 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		908FB1A12B0E232E000A1A50 /* RoxChatMobileWidget */ = {
+		9071060F2BC46E19000431A5 /* RoxchatClientLibrary */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 908FB1A02B0E232E000A1A50 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */;
+			package = 9071060E2BC46E19000431A5 /* XCRemoteSwiftPackageReference "mobile-sdk-ios" */;
+			productName = RoxchatClientLibrary;
+		};
+		907106122BC46E4E000431A5 /* RoxChatMobileWidget */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 907106112BC46E4E000431A5 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */;
 			productName = RoxChatMobileWidget;
 		};
 /* End XCSwiftPackageProductDependency section */

@@ -241,6 +241,7 @@ public protocol MessageAttachment {
      */
     func getErrorMessage() -> String?
     
+    func isEqual(to messageAttachment: MessageAttachment) -> Bool
 }
 
 /**
@@ -320,6 +321,7 @@ public protocol FileInfo {
      */
     func getURL() -> URL?
     
+    func isEqual(to fileInfo: FileInfo) -> Bool
 }
 
 /**
@@ -363,6 +365,8 @@ public protocol ImageInfo {
      Width of an image in pixels.
      */
     func getWidth() -> Int?
+    
+    func isEqual(to imageInfo: ImageInfo) -> Bool
 }
 
 /**
@@ -389,6 +393,8 @@ public protocol Keyboard {
      Keyboard response.
      */
     func getResponse() -> KeyboardResponse?
+    
+    func isEqual(to keyboard: Keyboard) -> Bool
 }
 
 /**
@@ -441,6 +447,8 @@ public protocol KeyboardResponse {
      ID of a message.
      */
     func getMessageID() -> String
+    
+    func isEqual(to keyboardResponse: KeyboardResponse) -> Bool
 }
 
 /**
@@ -473,6 +481,8 @@ public protocol KeyboardButton {
      Params of a button.
      */
     func getParams() -> Params?
+    
+    func isEqual(to keyboardButton: KeyboardButton) -> Bool
 }
 
 /**
@@ -503,6 +513,8 @@ public protocol Configuration {
      Button state.
      */
     func getState() -> ButtonState
+    
+    func isEqual(to configuration: Configuration) -> Bool
 }
 
 /**
@@ -521,6 +533,8 @@ public protocol Params {
     /**
      */
     func getColor() -> String?
+    
+    func isEqual(to params: Params) -> Bool
 }
 
 
@@ -542,6 +556,8 @@ public protocol KeyboardRequest {
      Request message ID.
      */
     func getMessageID() -> String
+    
+    func isEqual(to keyboardRequest: KeyboardRequest) -> Bool
 }
 
 /**
@@ -597,6 +613,8 @@ public protocol Quote {
      Quote type.
      */
     func getState() -> QuoteState
+    
+    func isEqual(to quote: Quote) -> Bool
 }
 
 /**
@@ -613,6 +631,8 @@ public protocol Sticker {
      Sticker ID.
      */
     func getStickerId() -> Int
+    
+    func isEqual(to sticker: Sticker) -> Bool
 }
 
 /**
