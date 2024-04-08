@@ -29,7 +29,6 @@
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		900337D527D8A3FE000EFBEC /* UIActivityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 900337D427D8A3FE000EFBEC /* UIActivityType.swift */; };
 		90038C96279629BE000267B9 /* NSRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90038C95279629BE000267B9 /* NSRange.swift */; };
-		907106102BC46E19000431A5 /* RoxchatClientLibrary in Frameworks */ = {isa = PBXBuildFile; productRef = 9071060F2BC46E19000431A5 /* RoxchatClientLibrary */; };
 		907106132BC46E4E000431A5 /* RoxChatMobileWidget in Frameworks */ = {isa = PBXBuildFile; productRef = 907106122BC46E4E000431A5 /* RoxChatMobileWidget */; };
 		907869D3286B063000FC09A1 /* RoxchatServerSideSettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907869D2286B063000FC09A1 /* RoxchatServerSideSettingsManager.swift */; };
 		908FB1A42B0E2360000A1A50 /* ExternalWidgetBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908FB1A32B0E2360000A1A50 /* ExternalWidgetBuilder.swift */; };
@@ -182,7 +181,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				907106132BC46E4E000431A5 /* RoxChatMobileWidget in Frameworks */,
-				907106102BC46E19000431A5 /* RoxchatClientLibrary in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,7 +409,6 @@
 			);
 			name = RoxchatClientLibrary_Example;
 			packageProductDependencies = (
-				9071060F2BC46E19000431A5 /* RoxchatClientLibrary */,
 				907106122BC46E4E000431A5 /* RoxChatMobileWidget */,
 			);
 			productName = RoxchatClientLibrary;
@@ -457,7 +454,6 @@
 			);
 			mainGroup = 607FACC71AFB9204008FA782;
 			packageReferences = (
-				9071060E2BC46E19000431A5 /* XCRemoteSwiftPackageReference "mobile-sdk-ios" */,
 				907106112BC46E4E000431A5 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */,
 			);
 			productRefGroup = 607FACD11AFB9204008FA782 /* Products */;
@@ -852,30 +848,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		9071060E2BC46E19000431A5 /* XCRemoteSwiftPackageReference "mobile-sdk-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/roxchat/mobile-sdk-ios";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.4;
-			};
-		};
 		907106112BC46E4E000431A5 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/roxchat/mobile-widget-ios";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.1;
+				minimumVersion = 1.1.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		9071060F2BC46E19000431A5 /* RoxchatClientLibrary */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9071060E2BC46E19000431A5 /* XCRemoteSwiftPackageReference "mobile-sdk-ios" */;
-			productName = RoxchatClientLibrary;
-		};
 		907106122BC46E4E000431A5 /* RoxChatMobileWidget */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 907106112BC46E4E000431A5 /* XCRemoteSwiftPackageReference "mobile-widget-ios" */;

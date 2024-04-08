@@ -1,5 +1,5 @@
 {
-  "originHash" : "b3b65f5fedbd8d35abb058cf9e85528dc6a8676764c2613c53949d7645b5921e",
+  "originHash" : "1bcb02c0b7f21e4240d1c00f023ce884795018a03584a80e98794a96ace5296b",
   "pins" : [
     {
       "identity" : "cosmos",
@@ -31,10 +31,10 @@
     {
       "identity" : "mobile-sdk-ios",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/roxchat/mobile-sdk-ios",
+      "location" : "https://github.com/roxchat/mobile-sdk-ios.git",
       "state" : {
         "revision" : "8aaaf1f11c0f12bf0828b85199a9416eb2942a34",
-        "version" : "3.0.4"
+        "version" : "3.0.6"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/roxchat/mobile-widget-ios",
       "state" : {
-        "revision" : "62111738f2a5586ef79391a1e03bbadf7afda85e",
-        "version" : "1.0.1"
+        "revision" : "adfcedb35100cd4ca55c722828212b08ba7ab011",
+        "version" : "1.1.0"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/Nuke.git",
       "state" : {
-        "revision" : "4625c73ea00a9fb4b4f3e28d95d0021a44af7e59",
-        "version" : "12.5.0"
+        "revision" : "6001489d22e5f41a4956c1b6cd4cf7cbe8f44dff",
+        "version" : "8.4.1"
       }
     },
     {
