@@ -120,7 +120,6 @@
 "There is no current agent to rate" = "There is no agent to rate.";
 "This agent not in the current chat" = "This agent not in the current chat";
 "This chat does not exist" = "This chat does not exist.";
-"To start a chat tap on the button below.\n\nOperator can answer to your chat at:\nhttps://demo.rox.chat/\n\nThis app source code can be found at:\nhttps://github.com/roxchat/mobile-sdk-ios" = "Tap the button bellow to start chatting.\nSing in as an agent to answer this chat at:\nhttps://demo.rox.chat/\n\nSource code of this app can be found at:\nhttps://github.com/roxchat/mobile-sdk-ios";
 "Today" = "Today";
 "Unknown error" = "Unknown error";
 "Uploading file" = "Uploading file";

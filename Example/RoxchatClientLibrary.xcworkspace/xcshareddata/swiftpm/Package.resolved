@@ -33,7 +33,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/roxchat/mobile-sdk-ios.git",
       "state" : {
-        "revision" : "8aaaf1f11c0f12bf0828b85199a9416eb2942a34",
+        "revision" : "111410c8a67c75f6388db4ed9f1b39efa5be387b",
         "version" : "3.0.6"
       }
     },
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/roxchat/mobile-widget-ios",
       "state" : {
-        "revision" : "adfcedb35100cd4ca55c722828212b08ba7ab011",
-        "version" : "1.1.0"
+        "branch" : "release_1_1_0",
+        "revision" : "bd913d027d8b17785243faaa48c45e47d4054538"
       }
     },
     {

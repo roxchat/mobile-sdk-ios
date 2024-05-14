@@ -30,4 +30,4 @@
 "xS6-J8-Sm9.accessibilityLabel" = "Greeting words";
 
 /* Class = "UITextView"; text = "To start a chat tap on the button below.\n\nOperator can answer to your chat at:\nhttps://demo.rox.chat/\n\nThis app source code can be found at:\nhttps://github.com/roxchat/mobile-sdk-ios"; ObjectID = "xS6-J8-Sm9"; */
-"xS6-J8-Sm9.text" = "To start a chat tap on the button below.\n\nOperator can answer to your chat at:\nhttps://demo.rox.chat/\n\nThis app source code can be found at:\nhttps://github.com/roxchat/mobile-sdk-ios";
+"xS6-J8-Sm9.text" = "To start a chat tap on the button below.";
