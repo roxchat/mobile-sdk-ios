@@ -774,7 +774,7 @@
 				CODE_SIGN_ENTITLEMENTS = RoxchatClientLibrary_Example.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = NHV62264UD;
 				FRAMEWORK_SEARCH_PATHS = " $(inherited)";
 				INFOPLIST_FILE = RoxchatClientLibrary/Info.plist;
@@ -803,7 +803,7 @@
 				CODE_SIGN_ENTITLEMENTS = RoxchatClientLibrary_Example.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = NHV62264UD;
 				FRAMEWORK_SEARCH_PATHS = " $(inherited)";
 				INFOPLIST_FILE = RoxchatClientLibrary/Info.plist;
