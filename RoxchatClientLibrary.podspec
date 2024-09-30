@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name = 'RoxchatClientLibrary'
-  s.version = '3.0.3'
+  s.version = '3.0.4'
   
   s.author = { 'RoxChat Ltd.' => 'dev@rox.chat' }
   s.homepage = 'https://rox.chat'

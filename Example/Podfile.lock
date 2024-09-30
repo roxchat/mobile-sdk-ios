@@ -102,7 +102,7 @@ PODS:
   - nanopb/encode (2.30909.0)
   - Nuke (8.4.1)
   - PromisesObjC (2.2.0)
-  - RoxchatClientLibrary (3.0.3):
+  - RoxchatClientLibrary (3.0.4):
     - SQLite.swift (= 0.13.3)
   - SlackTextViewController (1.9.6)
   - SnapKit (5.6.0)
@@ -159,11 +159,11 @@ SPEC CHECKSUMS:
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
   Nuke: d780e3507a86b86c589ab3cc5cd302d5456f06fb
   PromisesObjC: 09985d6d70fbe7878040aa746d78236e6946d2ef
-  RoxchatClientLibrary: e1d78358267c3ca1ba138ad04dfe1436d15b7553
+  RoxchatClientLibrary: 0961e8737b1408daeabf98650572638b4bd28768
   SlackTextViewController: b854e62c1c156336bc4fd409c6ca79b5773e8f9d
   SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
   SQLite.swift: 903bfa3bc9ab06345fdfbb578e34f47cfcf417da
 
 PODFILE CHECKSUM: 5bad850dc5ea313891b3acef1212f26853767b4f
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.13.0
