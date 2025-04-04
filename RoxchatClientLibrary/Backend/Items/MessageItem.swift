@@ -29,6 +29,7 @@ final class MessageItem {
         case reaction = "reaction"
         case canVisitorReact = "canVisitorReact"
         case canVisitorChangeReaction = "canVisitorChangeReaction"
+        case group = "group"
     }
     
     // MARK: - Properties
@@ -53,6 +54,7 @@ final class MessageItem {
     private var reaction: String?
     private var canVisitorReact: Bool?
     private var canVisitorChangeReaction: Bool?
+    private var group: GroupItem?
     
     // MARK: - Initialization
     init(jsonDictionary: [String: Any?]) {
@@ -86,6 +88,9 @@ final class MessageItem {
         
         if let rawData = jsonDictionary[JSONField.data.rawValue] as? [String: Any?] {
             self.rawData = rawData
+            if let group = rawData[JSONField.group.rawValue] as? [String: Any?] {
+                self.group = GroupItem(jsonDictionary: group)
+            }
         }
             
         if let data = jsonDictionary[JSONField.data.rawValue] as? MessageData {
@@ -232,6 +237,11 @@ final class MessageItem {
     func getCanVisitorChangeReaction() -> Bool {
         return canVisitorChangeReaction ?? false
     }
+    
+    func getGroup() -> GroupItem? {
+        return group
+    }
+    
     // MARK: -
     enum MessageKind: String {
         // Raw values equal to field names received in responses from server.
@@ -491,6 +501,7 @@ final class FileItem {
         case properties = "desc"
         case errorType = "error"
         case errorMessage = "error_message"
+        case visitorErrorMessage = "visitor_error_message"
     }
     
     private var downloadProgress: Int64?
@@ -498,6 +509,7 @@ final class FileItem {
     private var properties: FileParametersItem?
     private var errorType: String?
     private var errorMessage: String?
+    private var visitorErrorMessage: String?
     
     
     init(jsonDictionary: [String: Any?]) {
@@ -515,6 +527,9 @@ final class FileItem {
         }
         if let errorMessage = jsonDictionary[JSONField.errorMessage.rawValue] as? String {
             self.errorMessage = errorMessage
+        }
+        if let visitorErrorMessage = jsonDictionary[JSONField.visitorErrorMessage.rawValue] as? String {
+            self.visitorErrorMessage = visitorErrorMessage
         }
     }
     
@@ -538,29 +553,34 @@ final class FileItem {
         return errorMessage
     }
     
+    func getVisitorErrorMessage() -> String? {
+        return visitorErrorMessage
+    }
+    
     enum FileStateItem: String {
         // Raw values equal to field names received in responses from server.
         case error = "error"
         case ready = "ready"
         case upload = "upload"
         case externalChecks = "external_checks"
+        case externalVerification = "external_verification"
         
         init(fileState: FileState) {
             switch fileState {
             case .error:
                 self = .error
-                
                 break
             case .ready:
                 self = .ready
-                
                 break
             case .upload:
                 self = .upload
-                
                 break
             case .externalChecks:
                 self = .externalChecks
+                break
+            case .externalVerification:
+                self = .externalVerification
             }
         }
     }
@@ -572,4 +592,46 @@ struct SendingFile {
     var clientSideId: String
     var fileSize: Int
     
+}
+
+final class GroupItem {
+    private enum JSONField: String {
+        case id = "id"
+        case messageNumber = "msg_number"
+        case messageCount = "msg_count"
+    }
+    
+    private let id: String
+    private let messageNumber: Int
+    private let messageCount: Int
+    
+    init(jsonDictionary: [String: Any?]) {
+        if let id = jsonDictionary[JSONField.id.rawValue] as? String {
+            self.id = id
+        } else {
+            self.id = ""
+        }
+        if let messageNumber = jsonDictionary[JSONField.messageNumber.rawValue] as? Int {
+            self.messageNumber = messageNumber
+        } else {
+            self.messageNumber = 0
+        }
+        if let messageCount = jsonDictionary[JSONField.messageCount.rawValue] as? Int {
+            self.messageCount = messageCount
+        } else {
+            self.messageCount = 0
+        }
+    }
+    
+    func getID() -> String {
+        return id
+    }
+    
+    func getMessageCount() -> Int {
+        return messageCount
+    }
+    
+    func getMessageNumber() -> Int {
+        return messageNumber
+    }
 }

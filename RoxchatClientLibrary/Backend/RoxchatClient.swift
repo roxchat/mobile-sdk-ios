@@ -20,6 +20,7 @@ final class RoxchatClientBuilder {
     private var location: String?
     private var providedAuthenticationToken: String?
     private weak var providedAuthenticationTokenStateListener: ProvidedAuthorizationTokenStateListener?
+    private var requestHeader: [String: String]?
     private var sessionID: String?
     private var sessionParametersListener: SessionParametersListener?
     private var title: String?
@@ -80,6 +81,12 @@ final class RoxchatClientBuilder {
              providedAuthenticationToken: String? = nil) -> RoxchatClientBuilder {
         self.providedAuthenticationTokenStateListener = providedAuthenticationTokenStateListener
         self.providedAuthenticationToken = providedAuthenticationToken
+        
+        return self
+    }
+    
+    func set(requestHeader: [String: String]?) -> RoxchatClientBuilder {
+        self.requestHeader = requestHeader
         
         return self
     }
@@ -147,19 +154,22 @@ final class RoxchatClientBuilder {
             fatalError("Building Roxchat client failure because Internal Error Listener is nil in RoxchatClient.\(#function)")
         }
         
+        guard let baseURL = baseURL else {
+            RoxchatInternalLogger.shared.log(entry: "Building Roxchat client failure because Base URL is nil in RoxchatClient.\(#function)")
+            fatalError("Building Roxchat client failure because Base URL is nil in RoxchatClient.\(#function)")
+        }
+        
         let actionRequestLoop = ActionRequestLoop(completionHandlerExecutor: completionHandlerExecutor,
                                                   internalErrorListener: internalErrorListener,
-                                                  notFatalErrorHandler: notFatalErrorHandler)
+                                                  notFatalErrorHandler: notFatalErrorHandler,
+                                                  requestHeader: requestHeader,
+                                                  baseURL: baseURL)
         
         actionRequestLoop.set(authorizationData: authorizationData)
         
         guard let deltaCallback = deltaCallback else {
             RoxchatInternalLogger.shared.log(entry: "Building Roxchat client failure because Delta Callback is nil in RoxchatClient.\(#function)")
             fatalError("Building Roxchat client failure because Delta Callback is nil in RoxchatClient.\(#function)")
-        }
-        guard let baseURL = baseURL else {
-            RoxchatInternalLogger.shared.log(entry: "Building Roxchat client failure because Base URL is nil in RoxchatClient.\(#function)")
-            fatalError("Building Roxchat client failure because Base URL is nil in RoxchatClient.\(#function)")
         }
         guard let title = title else {
             RoxchatInternalLogger.shared.log(entry: "Building Roxchat client failure because Title is nil in RoxchatClient.\(#function)")
@@ -192,13 +202,12 @@ final class RoxchatClientBuilder {
                                                 visitorJSONString: visitorJSONString,
                                                 sessionID: sessionID,
                                                 prechat: prechat,
-                                                authorizationData: authorizationData
-                                                )
+                                                authorizationData: authorizationData,
+                                                requestHeader: requestHeader)
         
         return RoxchatClient(withActionRequestLoop: actionRequestLoop,
-                           deltaRequestLoop: deltaRequestLoop,
-                           roxchatActions: RoxchatActionsImpl(baseURL: baseURL,
-                                                      actionRequestLoop: actionRequestLoop))
+                             deltaRequestLoop: deltaRequestLoop,
+                             roxchatActions: RoxchatActionsImpl(actionRequestLoop: actionRequestLoop))
     }
     
 }
@@ -257,6 +266,10 @@ final class RoxchatClient {
         return roxchatActions
     }
     
+    func setRequestHeader(key: String, value: String) {
+        deltaRequestLoop.setRequestHeader(key: key, value: value)
+        actionRequestLoop.setRequestHeader(key: key, value: value)
+    }
 }
 
 /**

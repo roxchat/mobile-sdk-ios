@@ -1,7 +1,9 @@
 
 import Foundation
 import RoxchatClientLibrary
-let USER_DEFAULTS_NAME = "settings"
+
+let USER_DEFAULTS_NAME = "settings_demo"
+
 enum WMSettingsKeychainKey: String {
     case accountName = "account_name"
     case location = "location"
@@ -9,17 +11,21 @@ enum WMSettingsKeychainKey: String {
     case userDataJson = "userDataJson"
 }
 
+// MARK: - Settings
+
 final class Settings {
     
     // MARK: - Constants
+    
     enum DefaultSettings: String {
         case accountName = "demo"
         case location = "mobile"
-        case pageTitle = "iOS demo app"
+        case pageTitle = "iOS app"
         case userDataJson = ""
     }
     
     // MARK: - Properties
+    
     static let shared = Settings()
     var accountName: String
     var location: String
@@ -27,11 +33,12 @@ final class Settings {
     var userDataJson: String
     
     // MARK: - Initialization
+    
     private init() {
         if let settings = WMKeychainWrapper.standard.dictionary(forKey: USER_DEFAULTS_NAME)
             as? [String: String] {
             self.accountName = settings[WMSettingsKeychainKey.accountName.rawValue] ??
-                DefaultSettings.accountName.rawValue
+                ""
             self.location = settings[WMSettingsKeychainKey.location.rawValue] ??
                 DefaultSettings.location.rawValue
             self.pageTitle = settings[WMSettingsKeychainKey.pageTitle.rawValue] ??
@@ -39,7 +46,7 @@ final class Settings {
             self.userDataJson = settings[WMSettingsKeychainKey.userDataJson.rawValue] ??
                 DefaultSettings.userDataJson.rawValue
         } else {
-            self.accountName = DefaultSettings.accountName.rawValue
+            self.accountName = ""
             self.location = DefaultSettings.location.rawValue
             self.pageTitle = DefaultSettings.pageTitle.rawValue
             self.userDataJson = DefaultSettings.userDataJson.rawValue
@@ -49,11 +56,12 @@ final class Settings {
     
     func validateData() {
         if !"https://\(accountName).rox.chat/".validateURLString() {
-            self.accountName = "demo"
+            self.accountName = ""
         }
     }
     
     // MARK: - Methods
+    
     func save() {
         validateData()
         let settings = [
@@ -66,4 +74,23 @@ final class Settings {
                                   forKey: USER_DEFAULTS_NAME)
     }
     
+    func saveAccountName(accountName: String) {
+        self.accountName = accountName
+        let settings = [
+            WMSettingsKeychainKey.accountName.rawValue: accountName
+        ]
+        
+        WMKeychainWrapper.standard.setDictionary(settings,
+                                  forKey: USER_DEFAULTS_NAME)
+    }
+    
+    func getAccountName() -> String {
+        if let settings = WMKeychainWrapper.standard.dictionary(forKey: USER_DEFAULTS_NAME)
+            as? [String: String] {
+            return settings[WMSettingsKeychainKey.accountName.rawValue] ?? accountName
+        }
+        
+        return accountName
+    }
 }
+

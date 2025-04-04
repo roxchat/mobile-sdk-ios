@@ -69,6 +69,18 @@ public protocol RoxchatSession: class {
      */
     func set(deviceToken: String) throws
     
+    /**
+    This method allows to manually set request header after the session is created.
+    - parameter key:
+    Header key.
+    - parameter value:
+    Header value.
+    - throws:
+    `AccessError.invalidThread` if the method was called not from the thread the RoxchatSession was created in.
+    `AccessError.invalidSession` if RoxchatSession was destroyed.
+    */
+    func setRequestHeader(key: String, value: String) throws
+    
 }
 
 /**

@@ -3,6 +3,7 @@ import Foundation
 enum ContentType: String {
     case multipartBody = "multipart/form-data; boundary=" // + boundary string
     case urlEncoded = "application/x-www-form-urlencoded"
+    case jsonEncoded = "application/json"
 }
 
 enum Event: String {
@@ -35,6 +36,7 @@ enum Parameter: String {
     case longitude = "longitude"
     case message = "message"
     case operatorID = "operator_id"
+    case messageID = "message_id"
     case pageID = "page-id"
     case platform = "platform"
     case providedAuthenticationToken = "provided_auth_token"
@@ -66,6 +68,7 @@ enum Parameter: String {
     case fileError = "error"
     case fileSize = "file-size"
     case fileName = "file-name"
+    case threadId = "thread_id"
 }
 
 enum Platform: String {

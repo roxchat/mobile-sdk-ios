@@ -12,7 +12,6 @@ class DeltaRequestLoop: AbstractRequestLoop {
     // MARK: - Properties
     private static var providedAuthenticationTokenErrorCount = 0
     private let appVersion: String?
-    private let baseURL: String
     private let deltaCallback: DeltaCallback
     private let deviceID: String
     
@@ -20,7 +19,7 @@ class DeltaRequestLoop: AbstractRequestLoop {
     @WMSynchronized var authorizationData: AuthorizationData?
     @WMSynchronized private var providedAuthenticationToken: String?
     @WMSynchronized var queue: DispatchQueue?
-    @WMSynchronized var since: Int64 = 0
+    @WMSynchronized var since: String = "0"
     @WMSynchronized private var deviceToken: String?
     @WMSynchronized private var remoteNotificationSystem: Roxchat.RemoteNotificationSystem?
     @WMSynchronized private var location: String
@@ -51,10 +50,10 @@ class DeltaRequestLoop: AbstractRequestLoop {
          visitorJSONString: String?,
          sessionID: String?,
          prechat:String?,
-         authorizationData: AuthorizationData?) {
+         authorizationData: AuthorizationData?,
+         requestHeader: [String: String]?) {
         self.deltaCallback = deltaCallback
         self.sessionParametersListener = sessionParametersListener
-        self.baseURL = baseURL
         self.title = title
         self.location = location
         self.appVersion = appVersion
@@ -68,7 +67,10 @@ class DeltaRequestLoop: AbstractRequestLoop {
         self.providedAuthenticationTokenStateListener = providedAuthenticationTokenStateListener
         self.providedAuthenticationToken = providedAuthenticationToken
         self.prechat = prechat
-        super.init(completionHandlerExecutor: completionHandlerExecutor, internalErrorListener: internalErrorListener)
+        super.init(completionHandlerExecutor: completionHandlerExecutor,
+                   internalErrorListener: internalErrorListener,
+                   requestHeader: requestHeader,
+                   baseURL: baseURL)
     }
     
     // MARK: - Methods
@@ -102,7 +104,7 @@ class DeltaRequestLoop: AbstractRequestLoop {
         self.location = location
         
         authorizationData = nil
-        since = 0
+        since = "0"
         
         requestInitialization()
     }
@@ -113,9 +115,10 @@ class DeltaRequestLoop: AbstractRequestLoop {
     
     func run() {
         while isRunning() {
-            if authorizationData != nil && since != 0 {
+            if authorizationData != nil && since != "0" {
                 requestDelta()
             } else {
+                requestAccountConfig()
                 requestInitialization()
             }
         }
@@ -155,18 +158,58 @@ class DeltaRequestLoop: AbstractRequestLoop {
                 entry: "Error de-serializing server response: \(String(data: data, encoding: .utf8) ?? "unreadable data").",
                 verbosityLevel: .warning,
                 logType: .networkRequest)
+            completionHandlerExecutor?.execute(task: DispatchWorkItem {
+                self.internalErrorListener?.on(error: "wrong-init")
+            })
         }
     }
     
     func requestInitialization() {
         let url = URL(string: baseURL + ServerPathSuffix.initPath.rawValue + "?" + getInitializationParameterString())
         var request = URLRequest(url: url!)
-        request.setValue("3.0.4", forHTTPHeaderField: Parameter.roxchatSDKVersion.rawValue)
+        request.setValue("3.0.7", forHTTPHeaderField: Parameter.roxchatSDKVersion.rawValue)
         request.httpMethod = AbstractRequestLoop.HTTPMethods.get.rawValue
         
         do {
             let data = try perform(request: request)
             self.parseRequestInitialization(data: data)
+        } catch let unknownError as UnknownError {
+            self.completionHandlerExecutor?.execute(task: DispatchWorkItem {
+                self.handleRequestLoop(error: unknownError)
+            })
+        } catch {
+            RoxchatInternalLogger.shared.log(
+                entry: "Request failed with unknown error: \(error.localizedDescription)",
+                verbosityLevel: .warning,
+                logType: .networkRequest)
+        }
+    }
+    
+    func requestAccountConfig() {
+        let url = URL(string: baseURL + ServerPathSuffix.getServerSideSettings.rawValue + "?" + "location=" + location)
+        var request = URLRequest(url: url!)
+        request.setValue("3.0.7", forHTTPHeaderField: Parameter.roxchatSDKVersion.rawValue)
+        request.httpMethod = AbstractRequestLoop.HTTPMethods.get.rawValue
+        
+        do {
+            let rawData = try perform(request: request)
+            guard var rawDataString = String(data: rawData, encoding: .utf8),
+                  rawDataString.count >= 33 else {
+                return
+            }
+
+            rawDataString.removeFirst(31)
+            rawDataString.removeLast(2)
+
+            guard let data = rawDataString.data(using: .utf8, allowLossyConversion: false) else {
+                return
+            }
+            let json = try? JSONSerialization.jsonObject(with: data,
+                                                         options: [])
+            if let locationSettingsResponseDictionary = json as? [String: Any?] {
+                let locationSettingsResponse = ServerSettingsResponse(jsonDictionary: locationSettingsResponseDictionary)
+                deltaCallback.set(accountConfig: locationSettingsResponse.getAccountConfig())
+            }
         } catch let unknownError as UnknownError {
             self.completionHandlerExecutor?.execute(task: DispatchWorkItem {
                 self.handleRequestLoop(error: unknownError)
@@ -294,7 +337,7 @@ class DeltaRequestLoop: AbstractRequestLoop {
     
     private func sleepBetweenInitializationAttempts() {
         authorizationData = nil
-        since = 0
+        since = "0"
         
         usleep(1_000_000)  // 1s
     }
@@ -341,7 +384,7 @@ class DeltaRequestLoop: AbstractRequestLoop {
     
     private func handleReinitializationRequiredError() {
         authorizationData = nil
-        since = 0
+        since = "0"
     }
     
     private func handleProvidedAuthenticationTokenNotFoundError() {

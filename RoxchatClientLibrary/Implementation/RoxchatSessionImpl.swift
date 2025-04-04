@@ -41,6 +41,7 @@ final class RoxchatSessionImpl {
     private var messageStream: MessageStreamImpl
     private var sessionDestroyer: SessionDestroyer
     private var roxchatClient: RoxchatClient
+    private var sessionID: String?
     
     // MARK: - Initialization
     private init(accessChecker: AccessChecker,
@@ -48,19 +49,22 @@ final class RoxchatSessionImpl {
                  roxchatClient: RoxchatClient,
                  historyPoller: HistoryPoller,
                  locationStatusPoller: LocationStatusPoller?,
-                 messageStream: MessageStreamImpl) {
+                 messageStream: MessageStreamImpl,
+                 sessionID: String? = nil) {
         self.accessChecker = accessChecker
         self.sessionDestroyer = sessionDestroyer
         self.roxchatClient = roxchatClient
         self.historyPoller = historyPoller
         self.locationStatusPoller = locationStatusPoller
         self.messageStream = messageStream
+        self.sessionID = sessionID
     }
     
     // MARK: - Methods
     
     static func newInstanceWith(accountName: String,
                                 location: String,
+                                mobileChatInstance: String? = "default",
                                 appVersion: String?,
                                 visitorFields: ProvidedVisitorFields?,
                                 providedAuthorizationTokenStateListener: ProvidedAuthorizationTokenStateListener?,
@@ -78,15 +82,55 @@ final class RoxchatSessionImpl {
                                 roxchatAlert: RoxchatAlert?,
                                 prechat: String?,
                                 multivisitorSection: String,
-                                onlineStatusRequestFrequencyInMillis: Int64?) -> RoxchatSessionImpl {
+                                onlineStatusRequestFrequencyInMillis: Int64?,
+                                requestHeader: [String: String]?) -> RoxchatSessionImpl {
+        
+        let visitorName = visitorFields?.getID() ?? "anonymous"
+        let mobileChatInstance = mobileChatInstance ?? "default"
+        let userDefaultsKey = WMKeychainWrapperName.main.rawValue + visitorName + "." + mobileChatInstance
+        
+        if let session = WMSessionController.shared.session(
+            visitorName: visitorName,
+            accountName: accountName,
+            location: location,
+            mobileChatInstance: mobileChatInstance) {
+            do {
+                try session.checkAccess()
+            } catch {
+                WMSessionController.shared.remove(session: session)
+                return newInstanceWith(
+                    accountName: accountName,
+                    location: location,
+                    mobileChatInstance: mobileChatInstance,
+                    appVersion: appVersion,
+                    visitorFields: visitorFields,
+                    providedAuthorizationTokenStateListener: providedAuthorizationTokenStateListener,
+                    providedAuthorizationToken: providedAuthorizationToken,
+                    pageTitle: pageTitle,
+                    fatalErrorHandler: fatalErrorHandler,
+                    notFatalErrorHandler: notFatalErrorHandler,
+                    deviceToken: deviceToken,
+                    remoteNotificationSystem: remoteNotificationSystem,
+                    isLocalHistoryStoragingEnabled: isLocalHistoryStoragingEnabled,
+                    isVisitorDataClearingEnabled: isVisitorDataClearingEnabled,
+                    roxchatLogger: roxchatLogger,
+                    verbosityLevel: verbosityLevel,
+                    availableLogTypes: availableLogTypes,
+                    roxchatAlert: roxchatAlert,
+                    prechat: prechat,
+                    multivisitorSection: multivisitorSection,
+                    onlineStatusRequestFrequencyInMillis: onlineStatusRequestFrequencyInMillis,
+                    requestHeader: requestHeader
+                )
+            }
+            return session
+        }
+        
         RoxchatInternalLogger.setup(roxchatLogger: roxchatLogger,
                                   verbosityLevel: verbosityLevel,
                                   availableLogTypes: availableLogTypes)
         RoxchatInternalAlert.setup(roxchatAlert: roxchatAlert)
         let roxchatSdkQueue = DispatchQueue.current!
-        
-        
-        let userDefaultsKey = WMKeychainWrapperName.main.rawValue + (visitorFields?.getID() ?? "anonymous")
         
         var userDefaults: [String: Any]? = WMKeychainWrapper.standard.dictionary(forKey: userDefaultsKey)
         
@@ -156,6 +200,7 @@ final class RoxchatSessionImpl {
             .set(visitorJSONString: visitorJSON)
             .set(providedAuthenticationTokenStateListener: providedAuthorizationTokenStateListener,
                  providedAuthenticationToken: providedAuthorizationToken)
+            .set(requestHeader: requestHeader)
             .set(sessionID: sessionID)
             .set(authorizationData: authorizationData)
             .set(completionHandlerExecutor: ExecIfNotDestroyedHandlerExecutor(sessionDestroyer: sessionDestroyer,
@@ -197,11 +242,11 @@ final class RoxchatSessionImpl {
                 fatalError("Wrong readBeforeTimestamp type in RoxchatSessionImpl.\(#function)")
             }
             let sqlhistoryStorage = SQLiteHistoryStorage(dbName: dbName,
-                                                  serverURL: serverURLString,
-                                                  fileUrlCreator: fileUrlCreator,
-                                                  reachedHistoryEnd: historyMetaInformationStoragePreferences.isHistoryEnded(),
-                                                  queue: roxchatSdkQueue,
-                                                  readBeforeTimestamp: readBeforeTimestamp ?? Int64(-1))
+                                                         serverURL: serverURLString,
+                                                         fileUrlCreator: fileUrlCreator,
+                                                         reachedHistoryEnd: historyMetaInformationStoragePreferences.isHistoryEnded(),
+                                                         queue: roxchatSdkQueue,
+                                                         readBeforeTimestamp: readBeforeTimestamp ?? Int64(-1))
             historyStorage = sqlhistoryStorage
             
             let historyMajorVersion = historyStorage.getMajorVersion()
@@ -252,6 +297,7 @@ final class RoxchatSessionImpl {
                                               messageComposingHandler: MessageComposingHandler(roxchatActions: roxchatActions,
                                                                                                queue: roxchatSdkQueue),
                                               locationSettingsHolder: LocationSettingsHolder(userDefaultsKey: userDefaultsKey))
+        messageHolder.set(messageStream: messageStream)
         
         let historyPoller = HistoryPoller(withSessionDestroyer: sessionDestroyer,
                                           queue: roxchatSdkQueue,
@@ -293,12 +339,21 @@ final class RoxchatSessionImpl {
             entry: "RoxchatSession success created in RoxchatSessionImpl - \(#function)",
             verbosityLevel: .verbose)
         
-        return RoxchatSessionImpl(accessChecker: accessChecker,
-                                sessionDestroyer: sessionDestroyer,
-                                roxchatClient: roxchatClient,
-                                historyPoller: historyPoller,
-                                locationStatusPoller: locationStatusPoller,
-                                messageStream: messageStream)
+        let session = RoxchatSessionImpl(accessChecker: accessChecker,
+                                         sessionDestroyer: sessionDestroyer,
+                                         roxchatClient: roxchatClient,
+                                         historyPoller: historyPoller,
+                                         locationStatusPoller: locationStatusPoller,
+                                         messageStream: messageStream,
+                                         sessionID: sessionID)
+        
+        WMSessionController.shared.add(session: session)
+        
+        return session
+    }
+    
+    func getSessionID() -> String? {
+        return sessionID
     }
     
     // MARK: Private methods
@@ -514,6 +569,11 @@ extension RoxchatSessionImpl: RoxchatSession {
         roxchatClient.set(deviceToken: deviceToken)
     }
     
+    func setRequestHeader(key: String, value: String) throws {
+        try checkAccess()
+        
+        roxchatClient.setRequestHeader(key: key, value: value)
+    }
     
     // MARK: Private methods
     private func checkAccess() throws {
@@ -1064,6 +1124,8 @@ final private class ErrorHandlerToInternalAdapter: InternalErrorListener {
             return .wrongProvidedVisitorHash
         case RoxchatInternalError.providedVisitorFieldsExpired.rawValue:
             return .providedVisitorFieldsExpired
+        case RoxchatInternalError.wrongInit.rawValue:
+            return .initializationFailed
         default:
             return .unknown
         }

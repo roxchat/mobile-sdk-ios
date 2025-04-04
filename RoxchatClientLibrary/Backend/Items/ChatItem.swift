@@ -19,6 +19,7 @@ final class ChatItem {
         case offline = "offline"
         case `operator` = "operator"
         case operatorIDToRate = "operatorIdToRate"
+        case operatorIDToResolutionSurvey = "operatorIdToResolutionSurvey"
         case operatorTyping = "operatorTyping"
         case readByVisitor = "readByVisitor"
         case state = "state"
@@ -40,6 +41,7 @@ final class ChatItem {
     private var offline: Bool?
     private var `operator`: OperatorItem?
     private lazy var operatorIDToRate = [String: RatingItem]()
+    private lazy var operatorIDToResolutionSurvey = [String: RatingItem]()
     private var operatorTyping: Bool?
     private var readByVisitor: Bool?
     private var state: String?
@@ -92,6 +94,16 @@ final class ChatItem {
                 }
             }
         }
+        
+        if let operatorIDToResolutionSurveyValue = jsonDictionary[JSONField.operatorIDToResolutionSurvey.rawValue] as? [String: Any?] {
+            for (operatorIDValue, ratingValue) in operatorIDToResolutionSurveyValue {
+                if let ratingItemValue = ratingValue as? [String: Any?] {
+                    let rating = RatingItem(jsonDictionary: ratingItemValue)
+                    operatorIDToResolutionSurvey[operatorIDValue] = rating
+                }
+            }
+        }
+        
         
         if let category = jsonDictionary[JSONField.category.rawValue] as? String {
             self.category = category
@@ -179,6 +191,10 @@ final class ChatItem {
         self.operatorTyping = operatorTyping
     }
     
+    func set(id: Int) {
+        self.id = id
+    }
+    
     func getState() -> ChatItemState? {
         guard let state = state else {
             return nil
@@ -214,9 +230,17 @@ final class ChatItem {
         return operatorIDToRate
     }
     
+    func getOperatorIDToResolutionSurvey() -> [String: RatingItem]? {
+        return operatorIDToResolutionSurvey
+    }
+    
     func set(rating: RatingItem,
              toOperatorWithId operatorID: String) {
-        operatorIDToRate[operatorID] = rating
+        if rating.getAnswer() != nil {
+            operatorIDToResolutionSurvey[operatorID] = rating
+        } else {
+            operatorIDToRate[operatorID] = rating
+        }
     }
     
     func getUnreadByVisitorMessageCount() -> Int {

@@ -40,7 +40,8 @@ final class FileUrlCreator {
                 RoxchatInternalLogger.shared.log(entry: "Adding Percent Encoding With Allowed Characters failure in MessageImpl.\(#function)",
                                                verbosityLevel: .warning)
             }
-            let fileURLString = serverURL + ServerPathSuffix.downloadFile.rawValue + "/"
+            let baseURL = roxchatClient?.getDeltaRequestLoop().baseURL ?? serverURL
+            let fileURLString = baseURL + ServerPathSuffix.downloadFile.rawValue + "/"
                 + guid + "/"
                 + formatedFilename + "?"
                 + "page-id" + "=" + pageID + "&"

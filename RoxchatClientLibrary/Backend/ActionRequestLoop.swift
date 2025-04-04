@@ -9,18 +9,30 @@ class ActionRequestLoop: AbstractRequestLoop {
     // MARK: - Properties
     var actionOperationQueue: OperationQueue?
     var historyRequestOperationQueue: OperationQueue?
+    private var roxchatServerSideSettings: RoxchatServerSideSettings?
     @WMSynchronized var authorizationData: AuthorizationData?
     
     
     // MARK: - Initialization
     init(completionHandlerExecutor: ExecIfNotDestroyedHandlerExecutor,
-         internalErrorListener: InternalErrorListener, notFatalErrorHandler: NotFatalErrorHandler?) {
-        super.init(completionHandlerExecutor: completionHandlerExecutor, internalErrorListener: internalErrorListener)
+         internalErrorListener: InternalErrorListener,
+         notFatalErrorHandler: NotFatalErrorHandler?,
+         requestHeader: [String: String]?,
+         baseURL: String) {
+        super.init(completionHandlerExecutor: completionHandlerExecutor,
+                   internalErrorListener: internalErrorListener,
+                   requestHeader: requestHeader,
+                   baseURL: baseURL)
     }
     
     init(completionHandlerExecutor: ExecIfNotDestroyedHandlerExecutor,
-         internalErrorListener: InternalErrorListener) {
-        super.init(completionHandlerExecutor: completionHandlerExecutor, internalErrorListener: internalErrorListener)
+         internalErrorListener: InternalErrorListener,
+         requestHeader: [String: String]?,
+         baseURL: String) {
+        super.init(completionHandlerExecutor: completionHandlerExecutor,
+                   internalErrorListener: internalErrorListener,
+                   requestHeader: requestHeader,
+                   baseURL: baseURL)
     }
     
     // MARK: - Methods
@@ -53,7 +65,11 @@ class ActionRequestLoop: AbstractRequestLoop {
         self.authorizationData = authorizationData
     }
     
-    func enqueue(request: RoxchatRequest, withAuthData: Bool = true) {
+    func getRoxchatServerSideSettings() -> RoxchatServerSideSettings? {
+        return roxchatServerSideSettings
+    }
+    
+    func enqueue(request: RoxchatRequest, withAuthData: Bool = true, progressRequest: RoxchatRequest? = nil) {
         let operationQueue = request.getCompletionHandler() != nil ? historyRequestOperationQueue : actionOperationQueue
         operationQueue?.addOperation { [weak self] in
             guard let `self` = self else {
@@ -61,6 +77,10 @@ class ActionRequestLoop: AbstractRequestLoop {
             }
             
             let urlRequest = self.createUrlRequest(request: request, withAuthData: withAuthData)
+            var urlProgressRequest: URLRequest?
+            if let progressRequest = progressRequest {
+                urlProgressRequest = self.createUrlRequest(request: progressRequest, withAuthData: withAuthData)
+            }
             
             do {
                 guard let urlRequest = urlRequest else {
@@ -69,7 +89,7 @@ class ActionRequestLoop: AbstractRequestLoop {
                         logType: .networkRequest)
                     return
                 }
-                let data = try self.perform(request: urlRequest)
+                let data = try self.perform(request: urlRequest, progressRequest: urlProgressRequest)
                 if let dataJSON = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     
                     if let error = dataJSON[AbstractRequestLoop.ResponseFields.error.rawValue] as? String {
@@ -117,6 +137,18 @@ class ActionRequestLoop: AbstractRequestLoop {
                 }
             } catch let unknownError as UnknownError {
                 self.handleRequestLoop(error: unknownError)
+                if let sendFileCompletionHandler = request.getSendFileCompletionHandler() {
+                    guard let messageID = request.getMessageID() else {
+                        RoxchatInternalLogger.shared.log(
+                            entry: "Request has not message ID in ActionRequestLoop.\(#function)",
+                            logType: .networkRequest)
+                        return
+                    }
+                    self.completionHandlerExecutor?.execute(task: DispatchWorkItem {
+                        sendFileCompletionHandler.onFailure(messageID: messageID,
+                                                            error: .uploadCanceled)
+                    })
+                }
             } catch {
                 RoxchatInternalLogger.shared.log(
                     entry: "Request failed with unknown error: \(request.getBaseURLString()).",
@@ -150,7 +182,7 @@ class ActionRequestLoop: AbstractRequestLoop {
             parameterDictionary[Parameter.pageID.rawValue] = usedAuthorizationData.getPageID()
             parameterDictionary[Parameter.authorizationToken.rawValue] = usedAuthorizationData.getAuthorizationToken()
         }
-        let parametersString = parameterDictionary.stringFromHTTPParameters()
+        let parametersString = request.getContentType() == ContentType.jsonEncoded.rawValue ? parameterDictionary.jsonFromHTTPParameters() : parameterDictionary.stringFromHTTPParameters()
         
         var urlRequest: URLRequest?
         let httpMethod = request.getHTTPMethod()
@@ -210,7 +242,8 @@ class ActionRequestLoop: AbstractRequestLoop {
              RoxchatInternalError.notMatchingMagicNumbers.rawValue,
              RoxchatInternalError.unauthorized.rawValue,
              RoxchatInternalError.maxFilesCountPerChatExceeded.rawValue,
-             RoxchatInternalError.fileSizeTooSmall.rawValue:
+             RoxchatInternalError.fileSizeTooSmall.rawValue,
+             RoxchatInternalError.maliciousFileDetected.rawValue:
             self.handleSendFile(error: error,
                                 ofRequest: request)
             RoxchatInternalAlert.shared.present(title: .visitorActionError, message: .fileSendingError)
@@ -228,10 +261,23 @@ class ActionRequestLoop: AbstractRequestLoop {
             
             break
         case RoxchatInternalError.noChat.rawValue,
-             RoxchatInternalError.operatorNotInChat.rawValue:
+             RoxchatInternalError.operatorNotInChat.rawValue,
+             RoxchatInternalError.rateDisabled.rawValue:
             self.handleRateOperator(error: error,
                                     ofRequest: request)
+            self.handleResolutionSurvey(error: error,
+                                        ofRequest: request)
             RoxchatInternalAlert.shared.present(title: .visitorActionError, message: .operatorRatingError)
+            
+            break
+            
+        case RoxchatInternalError.resolutionSurveyValueIncorrect.rawValue,
+             RoxchatInternalError.ratedEntityMismatch.rawValue,
+             RoxchatInternalError.visitorSegmentMismatch.rawValue,
+             RoxchatInternalError.rateFormMismatch.rawValue:
+            
+            self.handleResolutionSurvey(error: error,
+                                        ofRequest: request)
             
             break
         case RoxchatInternalError.messageNotFound.rawValue,
@@ -374,6 +420,7 @@ class ActionRequestLoop: AbstractRequestLoop {
             self.completionHandlerExecutor?.execute(task: DispatchWorkItem {
                 do {
                     let roxchatServerSideSettings = try self.decodeToServerSideSettings(data: data)
+                    self.roxchatServerSideSettings = roxchatServerSideSettings
                     completionHandler.onSuccess(roxchatServerSideSettings: roxchatServerSideSettings)
                 } catch {
                     completionHandler.onFailure()
@@ -469,13 +516,50 @@ class ActionRequestLoop: AbstractRequestLoop {
                 switch errorString {
                 case RoxchatInternalError.noChat.rawValue:
                     rateOperatorError = .noChat
+                case RoxchatInternalError.wrongOperatorId.rawValue:
+                    rateOperatorError = .wrongOperatorId
                 case RoxchatInternalError.noteIsTooLong.rawValue:
                     rateOperatorError = .noteIsTooLong
+                case RoxchatInternalError.rateDisabled.rawValue:
+                    rateOperatorError = .rateDisabled
+                case RoxchatInternalError.operatorNotInChat.rawValue:
+                    rateOperatorError = .operatorNotInChat
+                case RoxchatInternalError.rateValueIncorrect.rawValue:
+                    rateOperatorError = .rateValueIncorrect
                 default:
-                    rateOperatorError = .wrongOperatorId
+                    rateOperatorError = .unknown
                 }
                 
                 rateOperatorCompletionhandler.onFailure(error: rateOperatorError)
+            })
+        }
+    }
+    
+    private func handleResolutionSurvey(error errorString: String,
+                                        ofRequest roxchatRequest: RoxchatRequest) {
+        if let resolutionCompletionhandler = roxchatRequest.getSendResolutionCompletionHandler() {
+            completionHandlerExecutor?.execute(task: DispatchWorkItem {
+                let resolutionError: SendResolutionError
+                switch errorString {
+                case RoxchatInternalError.noChat.rawValue:
+                    resolutionError = .noChat
+                case RoxchatInternalError.rateDisabled.rawValue:
+                    resolutionError = .rateDisabled
+                case RoxchatInternalError.operatorNotInChat.rawValue:
+                    resolutionError = .operatorNotInChat
+                case RoxchatInternalError.resolutionSurveyValueIncorrect.rawValue:
+                    resolutionError = .resolutionSurveyValueIncorrect
+                case RoxchatInternalError.ratedEntityMismatch.rawValue:
+                    resolutionError = .ratedEntityMismatch
+                case RoxchatInternalError.visitorSegmentMismatch.rawValue:
+                    resolutionError = .visitorSegmentMismatch
+                case RoxchatInternalError.rateFormMismatch.rawValue:
+                    resolutionError = .rateFormMismatch
+                default:
+                    resolutionError = .unknown
+                }
+                
+                resolutionCompletionhandler.onFailure(error: resolutionError)
             })
         }
     }
@@ -569,6 +653,9 @@ class ActionRequestLoop: AbstractRequestLoop {
                 break
             case RoxchatInternalError.unauthorized.rawValue:
                 sendFileError = .unauthorized
+                break
+            case RoxchatInternalError.maliciousFileDetected.rawValue:
+                sendFileError = .maliciousFileDetected
                 break
             default:
                 sendFileError = .unknown
@@ -784,12 +871,14 @@ class ActionRequestLoop: AbstractRequestLoop {
             request.getSendSurveyAnswerCompletionHandler()?.onSuccess()
             request.getSurveyCloseCompletionHandler()?.onSuccess()
             request.getRateOperatorCompletionHandler()?.onSuccess()
+            request.getSendResolutionCompletionHandler()?.onSuccess()
             request.getSendStickerCompletionHandler()?.onSuccess()
             request.getDeleteUploadedFileCompletionHandler()?.onSuccess()
             request.getGeolocationCompletionHandler()?.onSuccess()
             
             if let messageID = request.getMessageID() {
                 request.getDataMessageCompletionHandler()?.onSuccess(messageID: messageID)
+                request.getSendMessageCompletionHandler()?.onSuccess(messageID: messageID)
                 request.getSendFileCompletionHandler()?.onSuccess(messageID: messageID)
                 request.getDeleteMessageCompletionHandler()?.onSuccess(messageID: messageID)
                 request.getEditMessageCompletionHandler()?.onSuccess(messageID: messageID)

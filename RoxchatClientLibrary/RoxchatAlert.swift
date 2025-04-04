@@ -5,7 +5,7 @@ import Foundation
  Protocol that provides methods for implementing custom RoxchatClientLibrary network requests logging.
  It can be useful for debugging production releases if debug logs are not available.
  */
-public protocol RoxchatAlert: class {
+public protocol RoxchatAlert: AnyObject {
     
     /**
      Method which is called after new RoxchatClientLibrary network request log entry came out.

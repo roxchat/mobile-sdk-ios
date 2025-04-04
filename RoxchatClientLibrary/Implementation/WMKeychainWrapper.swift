@@ -22,6 +22,24 @@ public class WMKeychainWrapper: NSObject {
     public func setAppGroupName(userDefaults: UserDefaults, keychainAccessGroup: String) {
         WMKeychainWrapper.keychainAccessGroupName = keychainAccessGroup
         self.userDefaults = userDefaults
+        cleanOldKeychainData()
+    }
+    
+    private func cleanOldKeychainData() {
+        let firstRunKey = "\(roxchatUserDefaultsFirstRunKey)\(WMKeychainWrapper.keychainAccessGroupName)"
+        if !userDefaults.bool(forKey: firstRunKey) {
+            userDefaults.set(true, forKey: firstRunKey)
+            
+            for key in getAllKeychainItems() {
+                if let key = key {
+                    if key.starts(with: WMKeychainWrapper.roxchatKeyPrefix) {
+                        if !key.contains(WMKeychainWrapper.deviceTokenKey) {
+                            _ = WMKeychainWrapper.removeObject(key: key)
+                        }
+                    }
+                }
+            }
+        }
     }
     
     private func cleanUserDefaults() {
@@ -41,17 +59,7 @@ public class WMKeychainWrapper: NSObject {
             }
         }
         
-        if !userDefaults.bool(forKey: roxchatUserDefaultsFirstRunKey) {
-            userDefaults.set(true, forKey: roxchatUserDefaultsFirstRunKey)
-            
-            for key in getAllKeychainItems() {
-                if let key = key {
-                    if key.starts(with: WMKeychainWrapper.roxchatKeyPrefix) {
-                        _ = WMKeychainWrapper.removeObject(key: key)
-                    }
-                }
-            }
-        }
+        cleanOldKeychainData()
         
         // remove old db files
         for file in FileManager.default.urls(for: .libraryDirectory) ?? [] {

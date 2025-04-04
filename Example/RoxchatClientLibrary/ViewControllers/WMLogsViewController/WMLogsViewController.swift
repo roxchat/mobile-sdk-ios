@@ -1,13 +1,10 @@
 
 import UIKit
-import RoxchatClientLibrary
-
-protocol RoxchatLogManagerObserver {
-    func didGetNewLog(log: String)
-}
+import RoxChatMobileWidget
 
 class WMLogsViewController: UIViewController {
-
+    
+    lazy var navigationBarUpdater = NavigationBarUpdater()
 
     @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var scrollButton: UIButton!
@@ -24,15 +21,15 @@ class WMLogsViewController: UIViewController {
     }
 
     @IBAction private func scrollToBottom() {
-        if textView.text.count > 0 {
+        if !textView.text.isEmpty {
             let location = textView.text.count - 1
-            let bottom = NSMakeRange(location, 1)
+            let bottom = NSRange(location: location, length: 1)
             textView.scrollRangeToVisible(bottom)
         }
     }
 
     private func setupTextView() {
-        let logs = RoxchatLogManager.shared.getLogs()
+        let logs = WidgetLogManager.shared.getLogs()
         logs.forEach { log in
             addLog(log)
         }
@@ -48,12 +45,13 @@ class WMLogsViewController: UIViewController {
     }
 
     private func updateNavigationBar() {
-        NavigationBarUpdater.shared.set(isNavigationBarVisible: true)
-        NavigationBarUpdater.shared.update(with: .defaultStyle)
+        navigationBarUpdater.set(navigationController: navigationController)
+        navigationBarUpdater.set(isNavigationBarVisible: true)
+        navigationBarUpdater.update(with: .defaultStyle)
     }
 }
 
-extension WMLogsViewController: RoxchatLogManagerObserver {
+extension WMLogsViewController: WidgetLogManagerObserver {
     func didGetNewLog(log: String) {
         addLog(log)
         print(log)

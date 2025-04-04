@@ -1,0 +1,6 @@
+github "roxchat/mobile-sdk-ios" == 3.0.7
+github "roxchat/mobile-keyboard-ios" == 2.0.1
+github "evgenyneu/Cosmos" ~> 25.0
+github "SnapKit/SnapKit" ~> 5.7.1
+github "Flipboard/FLAnimatedImage" ~> 1.0.17
+github "kean/Nuke" ~> 12.0

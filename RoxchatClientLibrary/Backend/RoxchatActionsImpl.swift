@@ -14,6 +14,7 @@ final class RoxchatActionsImpl {
         case closeChat = "chat.close"
         case geoResponse = "geo_response"
         case rateOperator = "chat.operator_rate_select"
+        case resolutionSurvey = "chat.resolution_survey_select"
         case respondSentryCall = "chat.action_request.call_sentry_action_request"
         case sendMessage = "chat.message"
         case deleteMessage = "chat.delete_message"
@@ -34,15 +35,12 @@ final class RoxchatActionsImpl {
     }
     
     // MARK: - Properties
-    private let baseURL: String
+    //private let baseURL: String
     let actionRequestLoop: ActionRequestLoop
     private var sendingFiles = [String: SendingFile]()
     
     // MARK: - Initialization
-    init(baseURL: String,
-         actionRequestLoop: ActionRequestLoop
-    ) {
-        self.baseURL = baseURL
+    init(actionRequestLoop: ActionRequestLoop) {
         self.actionRequestLoop = actionRequestLoop
     }
     
@@ -79,16 +77,16 @@ extension RoxchatActionsImpl: RoxchatActions {
             dataToPost[Parameter.data.rawValue] = dataJSONString
         }
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        messageID: clientSideID,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        dataMessageCompletionHandler: dataMessageCompletionHandler,
-                                                        editMessageCompletionHandler: editMessageCompletionHandler,
-                                                        sendMessageCompletionHandler: sendMessageCompletionHandler))
+                                                          primaryData: dataToPost,
+                                                          messageID: clientSideID,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          dataMessageCompletionHandler: dataMessageCompletionHandler,
+                                                          editMessageCompletionHandler: editMessageCompletionHandler,
+                                                          sendMessageCompletionHandler: sendMessageCompletionHandler))
     }
     
     func send(file: Data,
@@ -97,10 +95,15 @@ extension RoxchatActionsImpl: RoxchatActions {
               clientSideID: String,
               completionHandler: SendFileCompletionHandler? = nil,
               uploadFileToServerCompletionHandler: UploadFileToServerCompletionHandler? = nil) {
+        let max = (actionRequestLoop.getRoxchatServerSideSettings()?.accountConfig.maxVisitorUploadFileSize ?? 10) * 1024 * 1024
+        guard max > file.count else {
+            completionHandler?.onFailure(messageID: clientSideID, error: SendFileError.fileSizeExceeded)
+            return
+        }
         let dataToPost = [Parameter.chatMode.rawValue: ChatMode.online.rawValue,
                           Parameter.clientSideID.rawValue: clientSideID] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.uploadFile.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.uploadFile.rawValue
         
         let boundaryString = NSUUID().uuidString
         
@@ -110,17 +113,47 @@ extension RoxchatActionsImpl: RoxchatActions {
             fileSize: Int(file.count)
         )
         sendingFiles[clientSideID] = sendingFile
+        
+        let progressRequest = sendFileProgressRequest(fileSize: file.count,
+                                                      filename: filename,
+                                                      mimeType: mimeType,
+                                                      clientSideID: clientSideID,
+                                                      state: .upload)
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        messageID: clientSideID,
-                                                        filename: filename,
-                                                        mimeType: mimeType,
-                                                        fileData: file,
-                                                        boundaryString: boundaryString,
-                                                        contentType: (ContentType.multipartBody.rawValue + boundaryString),
-                                                        baseURLString: urlString,
-                                                        sendFileCompletionHandler: completionHandler,
-                                                        uploadFileToServerCompletionHandler: uploadFileToServerCompletionHandler))
+                                                          primaryData: dataToPost,
+                                                          messageID: clientSideID,
+                                                          filename: filename,
+                                                          mimeType: mimeType,
+                                                          fileData: file,
+                                                          boundaryString: boundaryString,
+                                                          contentType: (ContentType.multipartBody.rawValue + boundaryString),
+                                                          baseURLString: urlString,
+                                                          sendFileCompletionHandler: completionHandler,
+                                                          uploadFileToServerCompletionHandler: uploadFileToServerCompletionHandler),
+                                  progressRequest: progressRequest)
+    }
+    
+    func sendFileProgressRequest(fileSize: Int,
+                                 filename: String,
+                                 mimeType: String,
+                                 clientSideID: String,
+                                 state: SendFileProgressState) -> RoxchatRequest {
+        let pageId = self.actionRequestLoop.authorizationData?.getPageID() ?? ""
+        let dataToPost = [Parameter.actionn.rawValue: Action.uploadFileProgress.rawValue,
+                          Parameter.clientSideID.rawValue: clientSideID,
+                          Parameter.fileName.rawValue: filename,
+                          Parameter.fileSize.rawValue: fileSize.description,
+                          Parameter.fileState.rawValue: state.rawValue,
+                          Parameter.pageID.rawValue: pageId] as [String: Any]
+        
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
+        
+        return RoxchatRequest(httpMethod: .post,
+                            primaryData: dataToPost,
+                            messageID: clientSideID,
+                            mimeType: mimeType,
+                            contentType: ContentType.urlEncoded.rawValue,
+                            baseURLString: urlString)
     }
     
     func sendFileProgress(fileSize: Int,
@@ -153,6 +186,9 @@ extension RoxchatActionsImpl: RoxchatActions {
         case .maxFilesCountPerChatExceeded:
             sendFileError = .uploadedFileNotFound
             break
+        case .maliciousFileDetected:
+            sendFileError = .maliciousFileDetected
+            break
         case .uploadedFileNotFound:
             sendFileError = .unauthorized
             break
@@ -167,7 +203,7 @@ extension RoxchatActionsImpl: RoxchatActions {
             dataToPost[Parameter.fileProgress.rawValue] = progress.description
         }
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         let sendingFile = SendingFile(
             fileName: filename,
@@ -198,7 +234,7 @@ extension RoxchatActionsImpl: RoxchatActions {
             dataToPost[Parameter.hintQuestion.rawValue] = isHintQuestion
         }
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
@@ -217,7 +253,7 @@ extension RoxchatActionsImpl: RoxchatActions {
                           Parameter.message.rawValue: message,
                           Parameter.quote.rawValue: getQuotedMessage(repliedMessageId: quotedMessageID)] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
                                                         primaryData: dataToPost,
@@ -235,27 +271,27 @@ extension RoxchatActionsImpl: RoxchatActions {
         let dataToPost = [Parameter.actionn.rawValue: Action.deleteMessage.rawValue,
                           Parameter.clientSideID.rawValue: clientSideID] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        messageID: clientSideID,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        deleteMessageCompletionHandler: completionHandler))
+                                                          primaryData: dataToPost,
+                                                          messageID: clientSideID,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          deleteMessageCompletionHandler: completionHandler))
     }
     
     func deleteUploadedFile(fileGuid: String,
                             completionHandler: DeleteUploadedFileCompletionHandler?) {
         let dataToPost = [Parameter.guid.rawValue: fileGuid] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.fileDelete.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.fileDelete.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        deleteUploadedFileCompletionHandler: completionHandler))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          deleteUploadedFileCompletionHandler: completionHandler))
     }
     
     func startChat(withClientSideID clientSideID: String,
@@ -275,23 +311,23 @@ extension RoxchatActionsImpl: RoxchatActions {
             dataToPost[Parameter.customFields.rawValue] = custom_fields
         }
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
     func closeChat() {
         let dataToPost = [Parameter.actionn.rawValue: Action.closeChat.rawValue] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
     func set(visitorTyping: Bool,
@@ -304,24 +340,24 @@ extension RoxchatActionsImpl: RoxchatActions {
             dataToPost[Parameter.draft.rawValue] = draft
         }
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
     func set(prechatFields: String) {
         let dataToPost = [Parameter.actionn.rawValue: Action.setPrechat.rawValue,
                           Parameter.prechat.rawValue: prechatFields] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
     func requestHistory(since: String?,
@@ -331,29 +367,30 @@ extension RoxchatActionsImpl: RoxchatActions {
             dataToPost[Parameter.since.rawValue] = since
         }
         
-        let urlString = baseURL + ServerPathSuffix.getHistory.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.getHistory.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
-                                                        primaryData: dataToPost,
-                                                        baseURLString: urlString,
-                                                        historyRequestCompletionHandler: completion))
+                                                          primaryData: dataToPost,
+                                                          baseURLString: urlString,
+                                                          historyRequestCompletionHandler: completion))
     }
     
     func requestHistory(beforeMessageTimestamp: Int64,
                         completion: @escaping (_ data: Data?) throws -> ()) {
         let dataToPost = [Parameter.beforeTimestamp.rawValue: beforeMessageTimestamp] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.getHistory.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.getHistory.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
-                                                        primaryData: dataToPost,
-                                                        baseURLString: urlString,
-                                                        historyRequestCompletionHandler: completion))
+                                                          primaryData: dataToPost,
+                                                          baseURLString: urlString,
+                                                          historyRequestCompletionHandler: completion))
     }
     
     func rateOperatorWith(id: String?,
                           rating: Int,
                           visitorNote: String?,
+                          threadId: Int?,
                           completionHandler: RateOperatorCompletionHandler?) {
         var dataToPost = [Parameter.actionn.rawValue: Action.rateOperator.rawValue,
                           Parameter.rating.rawValue: String(rating)] as [String: Any]
@@ -364,25 +401,50 @@ extension RoxchatActionsImpl: RoxchatActions {
             dataToPost[Parameter.visitorNote.rawValue] = visitorNote
         }
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        if let threadId = threadId {
+            dataToPost[Parameter.threadId.rawValue] = String(threadId)
+        }
+        
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        rateOperatorCompletionHandler: completionHandler))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          rateOperatorCompletionHandler: completionHandler))
+    }
+    
+    func sendResolutionSurvey(id: String,
+                              answer: Int,
+                              threadId: Int?,
+                              completionHandler: SendResolutionCompletionHandler?) {
+        var dataToPost = [Parameter.actionn.rawValue: Action.resolutionSurvey.rawValue,
+                          Parameter.surveyAnswer.rawValue: String(answer),
+                          Parameter.operatorID.rawValue: id] as [String: Any]
+        
+        if let threadId = threadId {
+            dataToPost[Parameter.threadId.rawValue] = String(threadId)
+        }
+
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
+        
+        actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          sendResolutionCompletionHandler: completionHandler))
     }
     
     func respondSentryCall(id: String) {
         let dataToPost = [Parameter.actionn.rawValue: Action.respondSentryCall.rawValue,
                           Parameter.clientSideID.rawValue: id] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
     func searchMessagesBy(query: String, completion: @escaping (_ data: Data?) throws -> ()) {
@@ -390,46 +452,49 @@ extension RoxchatActionsImpl: RoxchatActions {
         let authToken = self.actionRequestLoop.authorizationData?.getAuthorizationToken() ?? ""
         
         let parameterDictionary: [String: String] = [Parameter.pageID.rawValue: pageId, Parameter.query.rawValue: query, Parameter.authorizationToken.rawValue:authToken]
-        let urlString = baseURL + ServerPathSuffix.search.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.search.rawValue
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
-                                                        primaryData: parameterDictionary,
-                                                        baseURLString: urlString,
-                                                        searchMessagesCompletionHandler: completion))
+                                                          primaryData: parameterDictionary,
+                                                          baseURLString: urlString,
+                                                          searchMessagesCompletionHandler: completion))
     }
     
     func update(deviceToken: String) {
         let dataToPost = [Parameter.actionn.rawValue: Action.setDeviceToken.rawValue,
                           Parameter.deviceToken.rawValue: deviceToken] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
-    func setChatRead() {
-        let dataToPost = [Parameter.actionn.rawValue: Action.chatRead.rawValue] as [String: Any]
+    func setChatOrMessageRead(messageID: String?) {
+        var dataToPost = [Parameter.actionn.rawValue: Action.chatRead.rawValue] as [String: Any]
+        if let messageID = messageID {
+            dataToPost[Parameter.messageID.rawValue] = messageID
+        }
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
     func updateWidgetStatusWith(data: String) {
         let dataToPost = [Parameter.actionn.rawValue: Action.widgetUpdate.rawValue,
                           Parameter.data.rawValue: data] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
     func sendKeyboardRequest(buttonId: String,
@@ -439,14 +504,14 @@ extension RoxchatActionsImpl: RoxchatActions {
                           Parameter.buttonId.rawValue: buttonId,
                           Parameter.requestMessageId.rawValue: messageId] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        messageID: messageId,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        keyboardResponseCompletionHandler: completionHandler))
+                                                          primaryData: dataToPost,
+                                                          messageID: messageId,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          keyboardResponseCompletionHandler: completionHandler))
     }
     
     func sendDialogTo(emailAddress: String,
@@ -454,13 +519,13 @@ extension RoxchatActionsImpl: RoxchatActions {
         let dataToPost = [Parameter.actionn.rawValue: Action.sendChatHistory.rawValue,
                           Parameter.email.rawValue: emailAddress] as [String: Any]
 
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
 
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        sendDialogToEmailAddressCompletionHandler: completionHandler))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          sendDialogToEmailAddressCompletionHandler: completionHandler))
     }
     
     
@@ -473,15 +538,13 @@ extension RoxchatActionsImpl: RoxchatActions {
             Parameter.clientSideID.rawValue: clientSideId
         ] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
-        actionRequestLoop.enqueue(request: RoxchatRequest(
-            httpMethod: .post,
-            primaryData: dataToPost,
-            contentType: ContentType.urlEncoded.rawValue,
-            baseURLString: urlString,
-            sendStickerCompletionHandler: completionHandler
-        ))
+        actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          sendStickerCompletionHandler: completionHandler))
     }
     
     func sendReaction(reaction: ReactionString,
@@ -500,16 +563,13 @@ extension RoxchatActionsImpl: RoxchatActions {
             Parameter.clientSideID.rawValue: clientSideId
         ] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
-        actionRequestLoop.enqueue(request: RoxchatRequest(
-            httpMethod: .post,
-            primaryData: dataToPost,
-            contentType: ContentType.urlEncoded.rawValue,
-            baseURLString: urlString,
-            reacionCompletionHandler: completionHandler
-        ))
-        
+        actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          reacionCompletionHandler: completionHandler))
     }
     
     func sendQuestionAnswer(surveyID: String,
@@ -523,84 +583,83 @@ extension RoxchatActionsImpl: RoxchatActions {
                           Parameter.surveyQuestionID.rawValue: questionID,
                           Parameter.surveyAnswer.rawValue: surveyAnswer] as [String: Any]
 
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
 
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        sendSurveyAnswerCompletionHandler: sendSurveyAnswerCompletionHandler))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          sendSurveyAnswerCompletionHandler: sendSurveyAnswerCompletionHandler))
     }
     
     func closeSurvey(surveyID: String,
                      surveyCloseCompletionHandler: SurveyCloseCompletionHandler?) {
-        let dataToPost = [Parameter.actionn.rawValue: Action.surveyAnswer.rawValue,
+        let dataToPost = [Parameter.actionn.rawValue: Action.surveyCancel.rawValue,
                           Parameter.surveyID.rawValue: surveyID] as [String: Any]
 
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
 
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        surveyCloseCompletionHandler: surveyCloseCompletionHandler))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          surveyCloseCompletionHandler: surveyCloseCompletionHandler))
     }
     
     func getOnlineStatus(location: String,
                          completion: @escaping (_ data: Data?) throws -> ()) {
         let dataToPost = [Parameter.location.rawValue: location] as [String: Any]
 
-        let urlString = baseURL + ServerPathSuffix.getOnlineStatus.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.getOnlineStatus.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        locationStatusRequestCompletionHandler: completion))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          locationStatusRequestCompletionHandler: completion))
     }
     
     func clearHistory() {
         let dataToPost = [Parameter.actionn.rawValue: Action.clearHistory.rawValue] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString))
     }
     
     func getServerSettings(forLocation location: String, completion: @escaping (Data?) throws -> ()) {
         let dataToPost = [String: Any]()
 
-        let urlString = baseURL + ServerPathSuffix.getConfig.rawValue + "/\(location)"
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.getConfig.rawValue + "/\(location)"
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        locationSettingsCompletionHandler: completion))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          locationSettingsCompletionHandler: completion))
     }
     
     func autocomplete(forText text: String, url: String, completion: AutocompleteCompletionHandler?) {
         let dataToPost = ["text": text]
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: url,
-                                                        autocompleteCompletionHandler: completion),
-                                                        withAuthData: false)
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.jsonEncoded.rawValue,
+                                                          baseURLString: url,
+                                                          autocompleteCompletionHandler: completion),
+                                                            withAuthData: false)
     }
 
-
     func getServerSideSettings(completionHandler: ServerSideSettingsCompletionHandler?) {
-        let urlString = baseURL + ServerPathSuffix.getServerSideSettings.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.getServerSideSettings.rawValue
 
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
-                                                        primaryData: [:],
-                                                        baseURLString: urlString,
-                                                        serverSideSettingsCompletionHandler: completionHandler))
+                                                          primaryData: [:],
+                                                          baseURLString: urlString,
+                                                          serverSideSettingsCompletionHandler: completionHandler))
     }
     
     func sendGeolocation(latitude: Double, longitude: Double, completionHandler: GeolocationCompletionHandler?) {
@@ -608,13 +667,13 @@ extension RoxchatActionsImpl: RoxchatActions {
                           Parameter.latitude.rawValue: latitude,
                           Parameter.longitude.rawValue: longitude] as [String: Any]
 
-        let urlString = baseURL + ServerPathSuffix.doAction.rawValue
+        let urlString = actionRequestLoop.baseURL + ServerPathSuffix.doAction.rawValue
         
         actionRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
-                                                        primaryData: dataToPost,
-                                                        contentType: ContentType.urlEncoded.rawValue,
-                                                        baseURLString: urlString,
-                                                        geolocationCompletionHandler: completionHandler))
+                                                          primaryData: dataToPost,
+                                                          contentType: ContentType.urlEncoded.rawValue,
+                                                          baseURLString: urlString,
+                                                          geolocationCompletionHandler: completionHandler))
     }
 
 }

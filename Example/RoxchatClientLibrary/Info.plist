@@ -72,5 +72,7 @@
 	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>keychainAppIdentifier</key>
+	<string>$(AppIdentifierPrefix)group.Roxchat-Client.Share</string>
 </dict>
 </plist>

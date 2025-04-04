@@ -6,7 +6,7 @@ import Foundation
  - seealso:
  `MessageStream.newMessageTracker(messageListener:)`
  */
-public protocol MessageTracker: class {
+public protocol MessageTracker: AnyObject {
     
     /**
      Requests last messages from history. Returns not more than `limitOfMessages` of messages. If an empty list is passed inside completion, there no messages in history yet.

@@ -32,11 +32,23 @@ class AbstractRequestLoop {
     private var currentDataTask: URLSessionDataTask?
     let completionHandlerExecutor: ExecIfNotDestroyedHandlerExecutor?
     let internalErrorListener: InternalErrorListener?
+    var baseURL: String
+    var requestHeader: [String: String]?
+    
+    private var observation: NSKeyValueObservation?
     
     init(completionHandlerExecutor: ExecIfNotDestroyedHandlerExecutor?,
-         internalErrorListener: InternalErrorListener?) {
+         internalErrorListener: InternalErrorListener?,
+         requestHeader: [String: String]?,
+         baseURL: String) {
         self.completionHandlerExecutor = completionHandlerExecutor
         self.internalErrorListener = internalErrorListener
+        self.requestHeader = requestHeader
+        self.baseURL = baseURL
+    }
+    
+    deinit {
+        observation?.invalidate()
     }
     
     // MARK: - Methods
@@ -71,11 +83,15 @@ class AbstractRequestLoop {
         return running
     }
     
-    func perform(request: URLRequest) throws -> Data {
+    func perform(request: URLRequest, progressRequest: URLRequest? = nil) throws -> Data {
         var requestWithUserAgent = request
-        requestWithUserAgent.setValue("iOS: Roxchat-Client 3.0.4; (\(UIDevice.current.model); \(UIDevice.current.systemVersion)); Bundle ID and version: \(Bundle.main.bundleIdentifier ?? "none") \(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "none")", forHTTPHeaderField: "User-Agent")
+        var progressRequestWithUserAgent = progressRequest
+        let value = "iOS: Roxchat-Client 3.0.7; (\(UIDevice.current.model); \(UIDevice.current.systemVersion)); Bundle ID and version: \(Bundle.main.bundleIdentifier ?? "none") \(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "none")"
+        requestWithUserAgent.setValue(value, forHTTPHeaderField: "User-Agent")
+        progressRequestWithUserAgent?.setValue(value, forHTTPHeaderField: "User-Agent")
         
         var errorCounter = 0
+        var connectionErrorCounter = 0
         var lastHTTPCode = -1
         
         while isRunning() {
@@ -107,6 +123,15 @@ class AbstractRequestLoop {
                 )
                 
                 if let error = error {
+                    if let error = error as NSError?,
+                       error.domain == NSURLErrorDomain && error.code == NSURLErrorCannotFindHost,
+                       var url = requestWithUserAgent.url?.absoluteString {
+                        if (url.starts(with: baseURL)) {
+                            baseURL = InternalUtils.changeDomainFor(url: baseURL)
+                        }
+                        url = InternalUtils.changeDomainFor(url: url)
+                        requestWithUserAgent.url = URL(string: url)
+                    }
                     semaphore.signal()
                     
                     RoxchatInternalLogger.shared.log(
@@ -132,6 +157,16 @@ class AbstractRequestLoop {
                 semaphore.signal()
             }
             currentDataTask = dataTask
+            
+            if let request = progressRequestWithUserAgent {
+                observation = dataTask.progress.observe(\.fractionCompleted) { progress, _ in
+                    var progressRequest = request
+                    let httpBody = progressRequest.httpBody?.utf8String ?? ""
+                    progressRequest.httpBody = (httpBody + "&progress=\(Int(progress.fractionCompleted * 100))").data(using: .utf8)
+                    let task = URLSession.shared.dataTask(with: progressRequest)
+                    task.resume()
+                }
+            }
             dataTask.resume()
             
             _ = semaphore.wait(timeout: .distantFuture)
@@ -148,7 +183,10 @@ class AbstractRequestLoop {
                         self.internalErrorListener?.onNotFatal(error: .noNetworkConnection)
                         self.internalErrorListener?.connectionStateChanged(connected: false)
                     })
-                    usleep(useconds_t(10_000_000.0))
+                    usleep(useconds_t(1_000_000 * (connectionErrorCounter / 5)))
+                    if connectionErrorCounter < 24 {
+                        connectionErrorCounter += 1
+                    }
                 } else {
                     throw UnknownError.serverError
                 }
@@ -156,7 +194,7 @@ class AbstractRequestLoop {
             }
             
             if let receivedData = receivedData,
-               (httpCode == 200 || httpCode == 400 || httpCode == 403 || httpCode == 413 || httpCode == 415) {
+               (httpCode == 200 || httpCode == 400 || httpCode == 402 || httpCode == 403 || httpCode == 404 || httpCode == 405 || httpCode == 413 || httpCode == 415 || httpCode == 500) {
                 self.internalErrorListener?.connectionStateChanged(connected: true)
                 return receivedData
             }
@@ -234,6 +272,14 @@ class AbstractRequestLoop {
             return Data()
         }
         return newData
+    }
+    
+    func setRequestHeader(key: String, value: String) {
+        if requestHeader != nil {
+            requestHeader?[key] = value
+        } else {
+            requestHeader = [key: value]
+        }
     }
     
     // MARK: Private methods

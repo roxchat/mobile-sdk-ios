@@ -98,6 +98,9 @@
 		8FD244EA200CE25C007EB9CB /* RoxchatError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD244A5200CE25B007EB9CB /* RoxchatError.swift */; };
 		8FD244EB200CE25C007EB9CB /* MessageStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD244A6200CE25B007EB9CB /* MessageStream.swift */; };
 		8FD244EC200CE25C007EB9CB /* Roxchat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD244A7200CE25B007EB9CB /* Roxchat.swift */; };
+		90C595B52E5767E500BB70C6 /* RoxchatServerSideSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C595B42E5767E500BB70C6 /* RoxchatServerSideSettings.swift */; };
+		90C595B72E57684400BB70C6 /* WeakRefference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C595B62E57683E00BB70C6 /* WeakRefference.swift */; };
+		90E683792E4A298A00B8C2AE /* WMSessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E683782E4A298600B8C2AE /* WMSessionController.swift */; };
 		959AFDE325D9DD7D0014B721 /* RoxchatActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 959AFDE225D9DD7D0014B721 /* RoxchatActions.swift */; };
 		95EE8A9E25C3A6E6006F7BFB /* RoxchatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95EE8A9D25C3A6E6006F7BFB /* RoxchatService.swift */; };
 		CE2E681120123DB7004E99EA /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2E681020123DB6004E99EA /* Array.swift */; };
@@ -221,6 +224,9 @@
 		8FD244A6200CE25B007EB9CB /* MessageStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageStream.swift; sourceTree = "<group>"; };
 		8FD244A7200CE25B007EB9CB /* Roxchat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Roxchat.swift; sourceTree = "<group>"; };
 		8FD244ED200CE3E4007EB9CB /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
+		90C595B42E5767E500BB70C6 /* RoxchatServerSideSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoxchatServerSideSettings.swift; sourceTree = "<group>"; };
+		90C595B62E57683E00BB70C6 /* WeakRefference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakRefference.swift; sourceTree = "<group>"; };
+		90E683782E4A298600B8C2AE /* WMSessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WMSessionController.swift; sourceTree = "<group>"; };
 		959AFDE225D9DD7D0014B721 /* RoxchatActions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RoxchatActions.swift; sourceTree = "<group>"; };
 		95EE8A9D25C3A6E6006F7BFB /* RoxchatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoxchatService.swift; sourceTree = "<group>"; };
 		CE2E681020123DB6004E99EA /* Array.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Array.swift; sourceTree = "<group>"; };
@@ -301,6 +307,7 @@
 				1134DD5B234A4BC8008FA6F0 /* RoxchatNotFatalError.swift */,
 				8FD2445E200CE259007EB9CB /* RoxchatRemoteNotification.swift */,
 				8FD2445F200CE259007EB9CB /* RoxchatSession.swift */,
+				90C595B62E57683E00BB70C6 /* WeakRefference.swift */,
 				8FD244ED200CE3E4007EB9CB /* Info.plist */,
 				CE76D6202210A6DC006A5BF0 /* FAQStructure.swift */,
 				CE76D6222210A6F3006A5BF0 /* FAQCategory.swift */,
@@ -440,6 +447,8 @@
 		8FD2449A200CE25B007EB9CB /* Implementation */ = {
 			isa = PBXGroup;
 			children = (
+				90C595B42E5767E500BB70C6 /* RoxchatServerSideSettings.swift */,
+				90E683782E4A298600B8C2AE /* WMSessionController.swift */,
 				1289E9762695BBBC007C15BF /* WMKeychainWrapper.swift */,
 				1289E9742695BB39007C15BF /* WMDataEncryptor.swift */,
 				8FD2449B200CE25B007EB9CB /* DepartmentImpl.swift */,
@@ -564,6 +573,7 @@
 				8FD244C3200CE25C007EB9CB /* AbstractRequestLoop.swift in Sources */,
 				1134DD5E234A69FF008FA6F0 /* RoxchatNotFatalErrorImpl.swift in Sources */,
 				1289E9752695BB3A007C15BF /* WMDataEncryptor.swift in Sources */,
+				90E683792E4A298A00B8C2AE /* WMSessionController.swift in Sources */,
 				CE6A697C220C799300B11E29 /* FAQActions.swift in Sources */,
 				CE6A6978220C730F00B11E29 /* FAQItem.swift in Sources */,
 				8FD244C0200CE25C007EB9CB /* MessageFactories.swift in Sources */,
@@ -637,6 +647,7 @@
 				8FD244B4200CE25C007EB9CB /* MemoryHistoryMetaInformationStorage.swift in Sources */,
 				113057AC256D22DE004BB13E /* UploadedFileImpl.swift in Sources */,
 				8FD244CE200CE25C007EB9CB /* VisitSessionStateItem.swift in Sources */,
+				90C595B52E5767E500BB70C6 /* RoxchatServerSideSettings.swift in Sources */,
 				8FD244C7200CE25C007EB9CB /* ProvidedVisitorFields.swift in Sources */,
 				8FD244CF200CE25C007EB9CB /* HistoryBeforeResponse.swift in Sources */,
 				8FD244DD200CE25C007EB9CB /* HistoryID.swift in Sources */,
@@ -654,6 +665,7 @@
 				1165DAA525D9F67700FBF72E /* LocationStatusResponse.swift in Sources */,
 				CE6A697A220C731600B11E29 /* FAQ.swift in Sources */,
 				8FD244D9200CE25C007EB9CB /* MessageToSend.swift in Sources */,
+				90C595B72E57684400BB70C6 /* WeakRefference.swift in Sources */,
 				123D716F26D645F500F78A1E /* WMSynchronizedObject.swift in Sources */,
 				8FD244D1200CE25C007EB9CB /* DeltaResponse.swift in Sources */,
 				CE2E681520123DD0004E99EA /* Int.swift in Sources */,

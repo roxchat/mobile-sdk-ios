@@ -1,13 +1,11 @@
-
 import UIKit
+import RoxchatClientLibrary
 
 class WMSettingsViewController: UIViewController {
     
     // Text fields
     @IBOutlet var accountNameTextField: UITextField!
     @IBOutlet var locationTextField: UITextField!
-    @IBOutlet var pageTitleTextField: UITextField!
-    @IBOutlet var userDataJsonTextView: UITextView!
     
     // Text fields error hints
     @IBOutlet var accountNameHintLabel: UILabel!
@@ -16,23 +14,31 @@ class WMSettingsViewController: UIViewController {
     // Editing/error views
     @IBOutlet var accountNameView: UIView!
     @IBOutlet var locationView: UIView!
-    @IBOutlet var pageTitleView: UIView!
     @IBOutlet var accountNameInfoButton: UIButton!
+    @IBOutlet var accountNameTitleLabel: UILabel!
+    @IBOutlet var locationTitleLabel: UILabel!
+    
+    // Select User cell
+    lazy var selectVisitorCell = SelectVisitorTableViewCell.loadXibView()
+    
     // tableView
-    var cells = [UITableViewCell]()
+    var dataSource: [Section: [UITableViewCell]] = [:]
     @IBOutlet var tableView: UITableView!
     @IBOutlet var accountNameCell: UITableViewCell!
     @IBOutlet var locationCell: UITableViewCell!
-    @IBOutlet var pageTitleCell: UITableViewCell!
-    @IBOutlet var accountFooterCell: UITableViewCell!
-    @IBOutlet var userDataJsonCell: UITableViewCell!
+    @IBOutlet var accountHeaderView: UIView!
+    @IBOutlet var userHeaderView: UIView!
 
-    //constraints
+    // constraints
     @IBOutlet var accountNameViewHeightContsraint: NSLayoutConstraint!
     @IBOutlet var locationViewHeightContsraint: NSLayoutConstraint!
-    @IBOutlet var pageTitleViewHeightContsraint: NSLayoutConstraint!
+    
+    // VisitorFields
+    lazy var visitorFieldsManager = WMVisitorFieldsManager()
+    lazy var navigationBarUpdater = NavigationBarUpdater()
     
     // MARK: - Private Properties
+    
     var rotationDuration: TimeInterval = 0.0
     
     lazy var alertDialogHandler = UIAlertHandler(delegate: self)
@@ -55,22 +61,23 @@ class WMSettingsViewController: UIViewController {
     @IBOutlet var bottomConstraint: NSLayoutConstraint!
     
     // MARK: - View Life Cycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        cells = [accountNameCell, locationCell, pageTitleCell, accountFooterCell, userDataJsonCell]
+        selectVisitorCell.delegate = self
+        dataSource[.account] = [accountNameCell, locationCell]
+        dataSource[.user] = [selectVisitorCell]
+        
         RoxchatServiceController.shared.stopSession()
-        accountNameTextField.text = Settings.shared.accountName
+        accountNameTextField.text = Settings.shared.getAccountName()
         locationTextField.text = Settings.shared.location
-        pageTitleTextField.text = Settings.shared.pageTitle
-        userDataJsonTextView.text = Settings.shared.userDataJson
-        accountNameTextField.placeholder = Settings.shared.accountName
-        locationTextField.placeholder = Settings.shared.location
         
         setupLabels()
         setupTextFieldsDelegate()
         
         setupNavigationItem()
         setupSaveButton()
+        setupSelectVisitorCell()
         
         hideKeyboardOnTap()
     }
@@ -130,7 +137,6 @@ class WMSettingsViewController: UIViewController {
         tableView.scrollToRowSafe(at: bottomMessageIndex, at: .bottom, animated: animated)
     }
     
-    
     @objc
     func toogleTestMode() {
         let message = WMTestManager.toogleTestMode() ? "Test mode enabled" : "Test mode disabled"
@@ -141,17 +147,17 @@ class WMSettingsViewController: UIViewController {
     }
     
     @objc
-    private func onBackButtonClick(sender: UIButton) {
+    private func onSaveButtonClick(sender: UIButton) {
         let isAccountNameValid = validateTextField(accountNameTextField)
         let islocationValid = validateTextField(locationTextField)
+        let isVisitorValid = visitorFieldsManager.isSelectedVisitorValid
 
-        if isAccountNameValid &&
-            islocationValid {
-            saveSettings(accountName: accountNameTextField.text ?? "",
-                         location: locationTextField.text ?? "",
-                         pageTitle: pageTitleTextField.text,
-                         userDataJson: userDataJsonTextView.text)
-            navigationController?.popViewController(animated: true)
+        if isAccountNameValid && islocationValid && isVisitorValid {
+            pingAccount()
+        }
+        
+        if !isVisitorValid {
+            showDemoVisitorAlert()
         }
     }
     
@@ -169,36 +175,115 @@ class WMSettingsViewController: UIViewController {
         keyboardWillStartAnimate(animationDuration: animationDuration, keyboardHeight: keyboardHeight)
     }
     
-    private func validateTextField(_ textField: UITextField) -> Bool {
-        if let currentText = textField.text, !currentText.isEmpty {
-            if !isTextContainsInvalidChar(currentText) {
-                updateHint(
-                    for: textField,
-                    hintState: .common)
-                return true
+    private func pingAccount() {
+        let accountName = accountNameTextField.text ?? ""
+        var url = accountName
+        if !accountName.contains("https://") {
+            url = "https://" + accountName + ".rox.chat"
+        }
+        
+        let pingManager = RoxchatPingManager(serverURL: url)
+
+        pingManager.sendPing { error in
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.alertDialogHandler.showAlertForInvalidAccountName()
+                }
             } else {
-                updateHint(
-                    for: textField,
-                    hintLabelTextType: .invalidChar,
-                    hintState: .error)
-                return false
+                DispatchQueue.main.async {
+                    self.saveAndContinue()
+                }
             }
-        } else {
+        }
+    }
+    
+    private func saveAndContinue() {
+        if Settings.shared.accountName != accountNameTextField.text {
+            visitorFieldsManager.updateVisitorsData()
+        }
+        saveSettings(
+            accountName: accountNameTextField.text ?? "",
+            location: locationTextField.text ?? ""
+        )
+        visitorFieldsManager.updateCurrentVisitor()
+        navigationController?.popViewController(animated: true)
+    }
+    
+    private func validateTextField(_ textField: UITextField) -> Bool {
+        
+        guard let currentText = textField.text, !currentText.isEmpty else {
             updateHint(
                 for: textField,
                 hintLabelTextType: .empty,
                 hintState: .error)
             return false
         }
+        
+        switch textField {
+        case accountNameTextField:
+            if !isAccountNameValid(with: currentText) {
+                updateHint(for: textField, hintLabelTextType: .error, hintState: .error)
+                return false
+            } else if isTextContainsInvalidChar(currentText) {
+                updateHint(for: textField, hintLabelTextType: .invalidChar, hintState: .error)
+                return false
+            } else {
+                updateHint(for: textField, hintState: .common)
+                return true
+            }
+        case locationTextField:
+            if isTextContainsInvalidChar(currentText) {
+                updateHint(for: textField, hintLabelTextType: .invalidChar, hintState: .error)
+                return false
+            } else {
+                updateHint(for: textField, hintState: .common)
+                return true
+            }
+        default:
+            return false
+        }
+    }
+    
+    private func isAccountNameValid(with text: String) -> Bool {
+        let isValidURL = URLComponents(string: text).map { components in
+            let isURLType = components.scheme != nil && components.host != nil
+            
+            if isURLType {
+                let regexPattern = #"^(https?://)?([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})(:[0-9]+)?(/.*)?$"#
+                let regex = try! NSRegularExpression(pattern: regexPattern, options: [])
+                let range = NSRange(location: 0, length: text.utf16.count)
+                let matches = regex.matches(in: text, options: [], range: range)
+                return !matches.isEmpty
+            }
+            
+            return components.path
+                .components(separatedBy: ".")
+                .filter { !$0.contains("www") }
+                .count <= 1
+        }
+        return isValidURL == true
     }
 
     private func isTextContainsInvalidChar(_ currentText: String) -> Bool {
-        for currentChar in currentText {
-            if !validCharactersForTextfields.contains(currentChar) {
-                return true
-            }
+        for currentChar in currentText where !validCharactersForTextfields.contains(currentChar) {
+           return true
         }
         return false
+    }
+    
+    private func showDemoVisitorAlert() {
+        let alert = UIAlertController(
+            title: "Error".localized,
+            message: "Parse demo visitor error.".localized,
+            preferredStyle: .alert
+        )
+        
+        let action = UIAlertAction(title: "Ok".localized, style: .default) { [weak self] _ in
+            self?.didSelect(visitor: .unauthorized)
+        }
+        
+        alert.addAction(action)
+        present(alert, animated: true)
     }
 
     private func updateHint(
@@ -226,6 +311,8 @@ class WMSettingsViewController: UIViewController {
                 accountNameHintLabel.text = "* Account name can't be empty.".localized
             case .invalidChar:
                 accountNameHintLabel.text = "Account name has invalid characters".localized
+            case .error:
+                accountNameHintLabel.text = "Error".localized
             }
         } else if textField == locationTextField {
             switch type {
@@ -233,22 +320,18 @@ class WMSettingsViewController: UIViewController {
                 locationHintLabel.text = "* Location can't be empty.".localized
             case .invalidChar:
                 locationHintLabel.text = "Location has invalid characters".localized
+            case .error:
+                locationHintLabel.text = "Error".localized
             }
         }
     }
     
     private func saveSettings(
         accountName: String,
-        location: String,
-        pageTitle: String?,
-        userDataJson: String?
+        location: String
     ) {
         Settings.shared.accountName = accountName
         Settings.shared.location = location
-        Settings.shared.userDataJson = userDataJson ?? ""
-        if let pageTitle = pageTitle {
-            Settings.shared.pageTitle = pageTitle
-        }
         Settings.shared.save()
     }
     
@@ -262,9 +345,14 @@ class WMSettingsViewController: UIViewController {
     private func setupSaveButtonGesture() {
         let tapGesture = UITapGestureRecognizer(
             target: self,
-            action: #selector(onBackButtonClick)
+            action: #selector(onSaveButtonClick)
         )
         saveButton.addGestureRecognizer(tapGesture)
+    }
+    
+    enum Section: Int {
+        case account
+        case user
     }
 }
 
@@ -287,29 +375,35 @@ extension WMSettingsViewController: UITextFieldDelegate {
         var currentView: UIView?
         var currentHintLabel: UILabel?
         var currentHeightConstraint: NSLayoutConstraint?
+        var currentTitleLabel: UILabel?
         if textField == accountNameTextField {
             currentView = accountNameView
             currentHintLabel = accountNameHintLabel
             currentHeightConstraint = accountNameViewHeightContsraint
+            currentTitleLabel = accountNameTitleLabel
         } else if textField == locationTextField {
             currentView = locationView
             currentHintLabel = locationHintLabel
             currentHeightConstraint = locationViewHeightContsraint
-        } else if textField == pageTitleTextField {
-            currentView = pageTitleView
-            currentHeightConstraint = pageTitleViewHeightContsraint
+            currentTitleLabel = locationTitleLabel
         }
         switch type {
         case .common:
             currentView?.backgroundColor = editViewBackgroundColourDefault
+            currentHintLabel?.isHidden = true
+            currentTitleLabel?.isHidden = false
             currentHintLabel?.alpha = 0.0
             currentHeightConstraint?.constant = 1
         case .editing:
             currentView?.backgroundColor = editViewBackgroundColourEditing
+            currentHintLabel?.isHidden = true
+            currentTitleLabel?.isHidden = false
             currentHintLabel?.alpha = 0.0
             currentHeightConstraint?.constant = 2
         case .error:
             currentView?.backgroundColor = editViewBackgroundColourError
+            currentHintLabel?.isHidden = false
+            currentTitleLabel?.isHidden = true
             currentHintLabel?.alpha = 1.0
             currentHeightConstraint?.constant = 2
         }
@@ -329,22 +423,21 @@ extension WMSettingsViewController: UITextFieldDelegate {
                 }
 
                 self.view.layoutIfNeeded()
-                if keyboardHeight > 0 && self.userDataJsonTextView.isFirstResponder {
-                    self.scrollToBottom(animated: false)
-                }
             }
         )
     }
 
     private func updateNavigationBar() {
-        NavigationBarUpdater.shared.update(with: .defaultStyle)
-        NavigationBarUpdater.shared.set(isNavigationBarVisible: true)
+        navigationBarUpdater.set(navigationController: navigationController)
+        navigationBarUpdater.update(with: .defaultStyle)
+        navigationBarUpdater.set(isNavigationBarVisible: true)
     }
 }
 
 enum HintLabelTextType {
     case empty
     case invalidChar
+    case error
 }
 
 enum TextFieldHintState {

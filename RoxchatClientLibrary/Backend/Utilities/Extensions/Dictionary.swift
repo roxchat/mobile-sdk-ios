@@ -27,7 +27,20 @@ extension Dictionary {
         return parameterArray.joined(separator: "&")
     }
     
-    private func getPercentEscapedString<T>(forKey key: String, value: T?) -> String {
+    func jsonFromHTTPParameters() -> String {
+        let parameterArray = map { (key, value) -> String in
+            guard let key = key as? String else {
+                    RoxchatInternalLogger.shared.log(entry: "Key has incorrect type or nil in extension Dictionary.\(#function)")
+                    return String()
+            }
+            
+            return getPercentEscapedString(forKey: key, value: value, isPartOfJSON: true)
+        }
+        
+        return "{" + parameterArray.joined(separator: ",") + "}"
+    }
+    
+    private func getPercentEscapedString<T>(forKey key: String, value: T?, isPartOfJSON: Bool = false) -> String {
         guard let value = value else {
             RoxchatInternalLogger.shared.log(entry: "Value is nil in extension Dictionary.\(#function)")
             return String()
@@ -45,6 +58,11 @@ extension Dictionary {
         default:
             RoxchatInternalLogger.shared.log(entry: "Value has incorrect type in extension Dictionary.\(#function)")
             return String()
+        }
+        
+        if isPartOfJSON {
+            stringValue = stringValue.replacingOccurrences(of: "\"", with: "\\\"")
+            return "\"\(key)\"=\"\(stringValue)\""
         }
         
         guard let percentEscapedKey = key.addingPercentEncodingForURLQueryValue() else {

@@ -5,7 +5,7 @@ import Foundation
  - seealso:
  `RoxchatSession.getStream()`
  */
-public protocol MessageStream: class {
+public protocol MessageStream: AnyObject {
     
     /**
      - seealso:
@@ -77,6 +77,16 @@ public protocol MessageStream: class {
     func getLastRatingOfOperatorWith(id: String) -> Int
     
     /**
+     - parameter operatorId:
+     ID of the operator.
+     - returns:
+     Previous resolution survey.
+     - attention:
+     This method can't be used as is. It requires that client server to support this mechanism.
+     */
+    func getLastResolutionSurveyWith(operatorId: String) -> Int?
+    
+    /**
      Rates an operator.
      To get an ID of the current operator call `getCurrentOperator()`.
      - important:
@@ -122,6 +132,30 @@ public protocol MessageStream: class {
                           note: String?,
                           byRating rating: Int,
                           completionHandler: RateOperatorCompletionHandler?) throws
+    
+    /**
+     Resolution survey.
+     To get an ID of the current operator call `getCurrentOperator()`.
+     - important:
+     Requires existing chat.
+     - seealso:
+     `SendResolutionCompletionHandler` protocol.
+     - parameter id:
+     ID of the operator to be rated.
+     - parameter answer:
+     Answer 0 or 1.
+     - parameter comletionHandler:
+     `SendResolutionCompletionHandler` object.
+     - throws:
+     `AccessError.invalidThread` if the method was called not from the thread the RoxchatSession was created in.
+     `AccessError.invalidSession` if RoxchatSession was destroyed.
+     - attention:
+     This method can't be used as is. It requires that client server to support this mechanism.
+     */
+    func sendResolutionSurvey(id: String,
+                              answer: Int,
+                              completionHandler: SendResolutionCompletionHandler?) throws
+    
     
     /**
      Respond sentry call
@@ -373,6 +407,36 @@ public protocol MessageStream: class {
      */
     func send(message: String,
               isHintQuestion: Bool?) throws -> String
+    
+    /**
+     Resends a message, if it wasn't sent.
+     - parameter message:
+     Message with sending status.
+     - parameter completionHandler:
+     Completion handler that executes when operation is done.
+     - returns:
+     ID of the message.
+     - throws:
+     `AccessError.invalidThread` if the method was called not from the thread the RoxchatSession was created in.
+     `AccessError.invalidSession` if RoxchatSession was destroyed.
+     */
+    func resend(message: Message,
+                completionHandler: ResendMessageCompletionHandler?) throws
+    
+    /**
+     Delete a message with sending status, if message wasn't sent.
+     - parameter message:
+     Message with sending status.
+     - parameter completionHandler:
+     Completion handler that executes when operation is done.
+     - returns:
+     ID of the message.
+     - throws:
+     `AccessError.invalidThread` if the method was called not from the thread the RoxchatSession was created in.
+     `AccessError.invalidSession` if RoxchatSession was destroyed.
+     */
+    func cancelResend(message: Message) throws
+    
     
     /**
      Sends a message with uploaded files.
@@ -648,6 +712,16 @@ public protocol MessageStream: class {
     func setChatRead() throws
     
     /**
+     Set chat before the message has been read by visitor.
+     - parameter message:
+     Message up to which the chat was read
+     - throws:
+     `AccessError.invalidThread` if the method was called not from the thread the RoxchatSession was created in.
+     `AccessError.invalidSession` if RoxchatSession was destroyed.
+     */
+    func setChatRead(before message: Message) throws
+    
+    /**
      Send current dialog to email address.
      - parameter emailAddress:
      Email addres for sending.
@@ -841,7 +915,7 @@ public protocol LocationSettings {
  - seealso:
  `MessageStream.send(message:data:completionHandler:)`.
  */
-public protocol DataMessageCompletionHandler: class {
+public protocol DataMessageCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -868,7 +942,7 @@ public protocol DataMessageCompletionHandler: class {
  - seealso:
  `MessageStream.edit(message:messageID:completionHandler:)`.
  */
-public protocol EditMessageCompletionHandler: class {
+public protocol EditMessageCompletionHandler: AnyObject {
     /**
      Executed when operation is done successfully.
      - parameter messageID:
@@ -893,7 +967,7 @@ public protocol EditMessageCompletionHandler: class {
  - seealso:
  `MessageStream.delete(messageID:completionHandler:)`.
  */
-public protocol DeleteMessageCompletionHandler: class {
+public protocol DeleteMessageCompletionHandler: AnyObject {
     /**
      Executed when operation is done successfully.
      - parameter messageID:
@@ -918,15 +992,20 @@ public protocol DeleteMessageCompletionHandler: class {
 - seealso:
 `MessageStream.send(message:completionHandler:)`
 */
-public protocol SendMessageCompletionHandler: class {
+public protocol SendMessageCompletionHandler: AnyObject {
     func onSuccess(messageID: String)
 }
 
+public protocol ResendMessageCompletionHandler: AnyObject {
+    func onSuccess(messageID: String)
+    
+    func onFailure()
+}
 /**
  - seealso:
  `MessageStream.send(file:filename:mimeType:completionHandler:)`
  */
-public protocol SendFileCompletionHandler: class {
+public protocol SendFileCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -949,7 +1028,7 @@ public protocol SendFileCompletionHandler: class {
     
 }
 
-public protocol SendFilesCompletionHandler: class {
+public protocol SendFilesCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -972,7 +1051,7 @@ public protocol SendFilesCompletionHandler: class {
     
 }
 
-public protocol UploadFileToServerCompletionHandler: class {
+public protocol UploadFileToServerCompletionHandler: AnyObject {
     /**
      Executed when operation is done successfully.
      - parameter id:
@@ -994,7 +1073,7 @@ public protocol UploadFileToServerCompletionHandler: class {
     func onFailure(messageID: String, error: SendFileError)
 }
 
-public protocol DeleteUploadedFileCompletionHandler: class {
+public protocol DeleteUploadedFileCompletionHandler: AnyObject {
     /**
      Executed when operation is done successfully.
      - parameter id:
@@ -1017,7 +1096,7 @@ public protocol DeleteUploadedFileCompletionHandler: class {
  - seealso:
  `MessageStream.sendKeyboardRequest(button:message:completionHandler:)`
  */
-public protocol SendKeyboardRequestCompletionHandler: class {
+public protocol SendKeyboardRequestCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -1044,7 +1123,7 @@ public protocol SendKeyboardRequestCompletionHandler: class {
  - seealso:
  `MessageStream.rateOperatorWith(id:byRating:completionHandler:)`.
  */
-public protocol RateOperatorCompletionHandler: class {
+public protocol RateOperatorCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -1062,11 +1141,29 @@ public protocol RateOperatorCompletionHandler: class {
     
 }
 
+public protocol SendResolutionCompletionHandler: AnyObject {
+    
+    /**
+     Executed when operation is done successfully.
+     */
+    func onSuccess()
+    
+    /**
+     Executed when operation is failed.
+     - parameter error:
+     Error.
+     - seealso:
+     `SendResolutionError`.
+     */
+    func onFailure(error: SendResolutionError)
+    
+}
+
 /**
  - seealso:
  `MessageStream.sendDialogTo(emailAddress:completionHandler:)`.
  */
-public protocol SendDialogToEmailAddressCompletionHandler: class {
+public protocol SendDialogToEmailAddressCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -1091,7 +1188,7 @@ public protocol SendDialogToEmailAddressCompletionHandler: class {
  This protocol can't be used as is. It requires that client server to support this mechanism.
  */
 
-public protocol SearchMessagesCompletionHandler: class {
+public protocol SearchMessagesCompletionHandler: AnyObject {
     
     /** Executed after search message operation complited. */
     func onSearchMessageSuccess(query: String, messages: [Message])
@@ -1104,7 +1201,7 @@ public protocol SearchMessagesCompletionHandler: class {
  - attention:
  This protocol can't be used as is. It requires that client server to support this mechanism.
  */
-public protocol SendStickerCompletionHandler: class {
+public protocol SendStickerCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -1128,7 +1225,7 @@ public protocol SendStickerCompletionHandler: class {
  - attention:
  This protocol can't be used as is. It requires that client server to support this mechanism.
  */
-public protocol AutocompleteCompletionHandler: class {
+public protocol AutocompleteCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -1152,7 +1249,7 @@ public protocol AutocompleteCompletionHandler: class {
  - attention:
  This protocol can't be used as is. It requires that client server to support this mechanism.
  */
-public protocol RawLocationConfigCompletionHandler: class {
+public protocol RawLocationConfigCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -1171,7 +1268,7 @@ public protocol RawLocationConfigCompletionHandler: class {
  - seealso:
  `MessageStream.getServerSideSettings(completionHandler:)`.
  */
-public protocol ServerSideSettingsCompletionHandler: class {
+public protocol ServerSideSettingsCompletionHandler: AnyObject {
     /**
      Executed when operation is done successfully.
      - parameter roxchatServerSideSettings:
@@ -1231,7 +1328,7 @@ public protocol SurveyCloseCompletionHandler {
  - seealso:
  `MessageStream.sendGeolocation(latitude:longtitude:completionHandler:)`.
  */
-public protocol GeolocationCompletionHandler: class {
+public protocol GeolocationCompletionHandler: AnyObject {
     
     /**
      Invoked when when operation is done successfully.
@@ -1249,7 +1346,7 @@ public protocol GeolocationCompletionHandler: class {
  - seealso:
  `VisitSessionState` protocol.
  */
-public protocol VisitSessionStateListener: class {
+public protocol VisitSessionStateListener: AnyObject {
     
     /**
      Called when `VisitSessionState` status is changed.
@@ -1269,7 +1366,7 @@ public protocol VisitSessionStateListener: class {
  `MessageStream.set(chatStateListener:)`
  `MessageStream.getChatState()`
  */
-public protocol ChatStateListener: class {
+public protocol ChatStateListener: AnyObject {
     
     /**
      Called during `ChatState` transition.
@@ -1288,7 +1385,7 @@ public protocol ChatStateListener: class {
  `MessageStream.set(currentOperatorChangeListener:)`
  `MessageStream.getCurrentOperator()`
  */
-public protocol CurrentOperatorChangeListener: class {
+public protocol CurrentOperatorChangeListener: AnyObject {
     
     /**
      Called when `Operator` of the current chat changed.
@@ -1307,7 +1404,7 @@ public protocol CurrentOperatorChangeListener: class {
  - seealso:
  `Department` protocol.
  */
-public protocol DepartmentListChangeListener: class {
+public protocol DepartmentListChangeListener: AnyObject {
     
     /**
      Called when department list is received.
@@ -1325,7 +1422,7 @@ public protocol DepartmentListChangeListener: class {
  - seealso:
  `LocationSettings`
  */
-public protocol LocationSettingsChangeListener: class {
+public protocol LocationSettingsChangeListener: AnyObject {
     
     /**
      Method called by an app when new LocationSettings object is received.
@@ -1343,7 +1440,7 @@ public protocol LocationSettingsChangeListener: class {
  - seealso:
  `MessageStream.set(operatorTypingListener:)`
  */
-public protocol OperatorTypingListener: class {
+public protocol OperatorTypingListener: AnyObject {
     
     /**
      Called when operator typing state changed.
@@ -1359,7 +1456,7 @@ public protocol OperatorTypingListener: class {
  - seealso:
  `MessageStream.set(onlineStatusChangeListener:)`
  */
-public protocol OnlineStatusChangeListener: class {
+public protocol OnlineStatusChangeListener: AnyObject {
     
     /**
      Called when new session status is received.
@@ -1380,7 +1477,7 @@ Interface that provides methods for handling changes of survey.
 - seealso:
 `MessageStream.set(surveyListener:)`
 */
-public protocol SurveyListener: class {
+public protocol SurveyListener: AnyObject {
     
     /**
     Method to be called one time when new survey was sent by server.
@@ -1407,7 +1504,7 @@ public protocol SurveyListener: class {
  - seealso:
  `MessageStream.set(unreadByOperatorTimestampChangeListener:)`.
  */
-public protocol UnreadByOperatorTimestampChangeListener: class {
+public protocol UnreadByOperatorTimestampChangeListener: AnyObject {
     
     /**
      Method to be called when parameter that is to be returned by `MessageStream.getUnreadByOperatorTimestamp()` method is changed.
@@ -1423,7 +1520,7 @@ public protocol UnreadByOperatorTimestampChangeListener: class {
  - seealso:
  `MessageStream.set(unreadByVisitorMessageCountChangeListener:)`.
  */
-public protocol UnreadByVisitorMessageCountChangeListener: class {
+public protocol UnreadByVisitorMessageCountChangeListener: AnyObject {
     
     /**
      Interface that provides methods for handling changes of parameter that is to be returned by `MessageStream.getUnreadByVisitorMessageCount()` method.
@@ -1439,7 +1536,7 @@ public protocol UnreadByVisitorMessageCountChangeListener: class {
  - seealso:
  `MessageStream.set(unreadByVisitorTimestampChangeListener:)`.
  */
-public protocol UnreadByVisitorTimestampChangeListener: class {
+public protocol UnreadByVisitorTimestampChangeListener: AnyObject {
     
     /**
      Interface that provides methods for handling changes of parameter that is to be returned by `MessageStream.getUnreadByVisitorTimestamp()` method.
@@ -1457,7 +1554,7 @@ public protocol UnreadByVisitorTimestampChangeListener: class {
  - attention:
  This protocol can't be used as is. It requires that client server to support this mechanism.
  */
-public protocol HelloMessageListener: class {
+public protocol HelloMessageListener: AnyObject {
     
     /**
      Calls at the begining of chat when hello message is available and no messages has been sent yet.
@@ -1473,7 +1570,7 @@ public protocol HelloMessageListener: class {
  This protocol can't be used as is. It requires that client server to support this mechanism.
  */
 
-public protocol ReactionCompletionHandler: class {
+public protocol ReactionCompletionHandler: AnyObject {
     
     /**
      Executed when operation is done successfully.
@@ -1705,6 +1802,11 @@ public enum VisitSessionState {
     @available(*, unavailable, renamed: "unknown")
     case UNKNOWN
     
+    /**
+     First question state.
+     */
+    case firstQuestion
+    
 }
 
 /**
@@ -1901,6 +2003,13 @@ public enum SendFileError: Error {
     */
     case unauthorized
     
+    /**
+    Upload canceled due session destroying or something else.
+    */
+    case uploadCanceled
+    
+    case maliciousFileDetected
+    
 }
 
 public enum SendFilesError: Error {
@@ -1992,6 +2101,73 @@ public enum RateOperatorError: Error {
     
     @available(*, unavailable, renamed: "noteIsTooLong")
     case NOTE_IS_TOO_LONG
+
+    /**
+    Rate function is disabled.
+    */
+    case rateDisabled
+    
+    /**
+    No operator in chat.
+    */
+    case operatorNotInChat
+    
+    /**
+    Wrong rate value.
+    */
+    case rateValueIncorrect
+    
+    /**
+    Unknown rate value.
+    */
+    case unknown
+}
+
+/**
+ - seealso:
+ `SendResolutionCompletionHandler.onFailure(error:)`
+ */
+public enum SendResolutionError: Error {
+    
+    /**
+     Arised when trying to send operator rating request if no chat is exists.
+     */
+    case noChat
+    
+    /**
+    Rate function is disabled.
+    */
+    case rateDisabled
+    
+    /**
+    No operator in chat.
+    */
+    case operatorNotInChat
+    
+    /**
+    Resolution survey value.
+    */
+    case resolutionSurveyValueIncorrect
+    
+    /**
+    Unknown rate value.
+    */
+    case unknown
+    
+    /**
+    Invalid rate form.
+    */
+    case rateFormMismatch
+    
+    /**
+    Invalid visitor segment.
+    */
+    case visitorSegmentMismatch
+    
+    /**
+     Invalid rated entity.
+    */
+    case ratedEntityMismatch
 
 }
 

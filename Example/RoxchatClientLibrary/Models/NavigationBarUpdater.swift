@@ -1,6 +1,10 @@
 
 import UIKit
 
+protocol NavigationBarUpdaterDelegate: AnyObject {
+    func setTitleViewTextColor(_ color: UIColor)
+}
+
 class NavigationBarUpdater {
 
     static let shared = NavigationBarUpdater()

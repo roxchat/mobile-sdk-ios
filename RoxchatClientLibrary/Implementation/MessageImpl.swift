@@ -34,6 +34,8 @@ class MessageImpl {
     private var visitorReactionInfo: String?
     private var visitorCanReact: Bool?
     private var visitorChangeReaction: Bool?
+    private var group: Group?
+    private var deleted: Bool?
     
     // MARK: - Initialization
     init(serverURLString: String,
@@ -61,7 +63,9 @@ class MessageImpl {
          messageIsEdited: Bool,
          visitorReactionInfo: String?,
          visitorCanReact: Bool?,
-         visitorChangeReaction: Bool?) {
+         visitorChangeReaction: Bool?,
+         group: Group?,
+         deleted: Bool?) {
         self.data = data
         self.clientSideID = clientSideID
         self.serverSideID = serverSideID
@@ -86,7 +90,8 @@ class MessageImpl {
         self.visitorReactionInfo = visitorReactionInfo
         self.visitorCanReact = visitorCanReact
         self.visitorChangeReaction = visitorChangeReaction
-        
+        self.group = group
+        self.deleted = deleted
         self.historyMessage = historyMessage
         if historyMessage {
             guard let internalID = internalID else {
@@ -246,6 +251,8 @@ MessageImpl {
     historyID = \(historyID?.getDBid() ?? "nil"),
     rawText = \(rawText ?? "nil"),
     read = \(read)
+    status = \(sendStatus)
+    deleted = \(deleted)
 }
 """
     }
@@ -397,23 +404,94 @@ extension MessageImpl: Message {
         return visitorChangeReaction ?? false
     }
     
+    func getGroup() -> Group? {
+        return group
+    }
+    
+    func isDeleted() -> Bool? {
+        return deleted
+    }
+    
 }
 
 extension MessageImpl: Equatable {
     
     static func == (lhs: MessageImpl,
                     rhs: MessageImpl) -> Bool {
-        return ((((((((lhs.clientSideID == rhs.clientSideID)
-            && (lhs.operatorID == rhs.operatorID))
-            && (lhs.rawText == rhs.rawText))
-            && (lhs.senderAvatarURLString == rhs.senderAvatarURLString))
-            && (lhs.senderName == rhs.senderName))
-            && (lhs.text == rhs.text))
-            && (lhs.timeInMicrosecond == rhs.timeInMicrosecond))
-            && (lhs.type == rhs.type))
-            && (lhs.isReadByOperator() == rhs.isReadByOperator()
-            && (lhs.canBeEdited() == rhs.canBeEdited()
-            && (lhs.isEdited() == rhs.isEdited())))
+        return lhs.clientSideID == rhs.clientSideID
+            && lhs.serverSideID == rhs.serverSideID
+            && lhs.operatorID == rhs.operatorID
+            && lhs.rawText == rhs.rawText
+            && lhs.senderAvatarURLString == rhs.senderAvatarURLString
+            && lhs.senderName == rhs.senderName
+            && lhs.text == rhs.text
+            && lhs.timeInMicrosecond == rhs.timeInMicrosecond
+            && lhs.type == rhs.type
+            && lhs.isReadByOperator() == rhs.isReadByOperator()
+            && lhs.canBeEdited() == rhs.canBeEdited()
+            && lhs.isEdited() == rhs.isEdited()
+            && lhs.visitorCanReact == rhs.visitorCanReact
+            && lhs.canVisitorReact() == rhs.canVisitorReact()
+            && lhs.canVisitorChangeReaction() == rhs.canVisitorChangeReaction()
+            && areEqualQuotes(lhs: lhs.quote, rhs: rhs.quote)
+            && areEqualKeyboard(lhs: lhs.getKeyboard(), rhs: rhs.getKeyboard())
+            && areEqualKeyboardRequest(lhs: lhs.getKeyboardRequest(), rhs: rhs.getKeyboardRequest())
+            && lhs.sendStatus == rhs.sendStatus
+            && lhs.serverURLString == rhs.serverURLString
+            && areEqualSticker(lhs: lhs.sticker, rhs: rhs.sticker)
+            && lhs.currentChatID == rhs.currentChatID
+            //&& lhs.rawData == rhs.rawData
+            && areEqualMessageAttachment(lhs: lhs.data?.getAttachment(), rhs: rhs.data?.getAttachment())
+            && lhs.historyID == rhs.historyID
+            && lhs.historyMessage == rhs.historyMessage
+            && lhs.read == rhs.read
+            && lhs.canBeReplied() == rhs.canBeReplied()
+            && lhs.visitorReactionInfo == rhs.visitorReactionInfo
+    }
+    
+    private static func areEqualQuotes(lhs: Quote?, rhs: Quote?) -> Bool {
+        if let checkNil = checkNil(lhs: lhs, rhs: rhs) {
+            return checkNil
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
+    
+    private static func areEqualKeyboard(lhs: Keyboard?, rhs: Keyboard?) -> Bool {
+        if let checkNil = checkNil(lhs: lhs, rhs: rhs) {
+            return checkNil
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
+    
+    private static func areEqualKeyboardRequest(lhs: KeyboardRequest?, rhs: KeyboardRequest?) -> Bool {
+        if let checkNil = checkNil(lhs: lhs, rhs: rhs) {
+            return checkNil
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
+    
+    private static func areEqualSticker(lhs: Sticker?, rhs: Sticker?) -> Bool {
+        if let checkNil = checkNil(lhs: lhs, rhs: rhs) {
+            return checkNil
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
+    
+    private static func areEqualMessageAttachment(lhs: MessageAttachment?, rhs: MessageAttachment?) -> Bool {
+        if let checkNil = checkNil(lhs: lhs, rhs: rhs) {
+            return checkNil
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
+    
+    private static func checkNil<T>(lhs: T?, rhs: T?) -> Bool? {
+        if lhs == nil && rhs != nil || lhs != nil && rhs == nil {
+            return false
+        }
+        if lhs == nil && rhs == nil {
+            return true
+        }
+        return nil
     }
     
 }
@@ -450,6 +528,7 @@ final class MessageAttachmentImpl: MessageAttachment {
     private var downloadProgress: Int64?
     private var errorType: String?
     private var errorMessage: String?
+    private var visitorErrorMessage: String?
     
     // MARK: - Initialization
     init(fileInfo: FileInfo,
@@ -457,13 +536,15 @@ final class MessageAttachmentImpl: MessageAttachment {
          state: AttachmentState,
          downloadProgress: Int64? = nil,
          errorType: String? = nil,
-         errorMessage: String? = nil) {
+         errorMessage: String? = nil,
+         visitorErrorMessage: String? = nil) {
         self.fileInfo = fileInfo
         self.filesInfo = filesInfo
         self.state = state
         self.downloadProgress = downloadProgress
         self.errorType = errorType
         self.errorMessage = errorMessage
+        self.visitorErrorMessage = visitorErrorMessage
     }
     
     // MARK: - Methods
@@ -492,6 +573,41 @@ final class MessageAttachmentImpl: MessageAttachment {
         return errorMessage
     }
     
+    func getVisitorErrorMessage() -> String? {
+        return visitorErrorMessage
+    }
+    
+    func isEqual(to messageAttachment: MessageAttachment) -> Bool {
+        guard let messageAttachment = messageAttachment as? MessageAttachmentImpl else {
+            return false
+        }
+        return self == messageAttachment
+    }
+    
+}
+
+extension MessageAttachmentImpl: Equatable {
+    static func == (lhs: MessageAttachmentImpl, rhs: MessageAttachmentImpl) -> Bool {
+        return lhs.fileInfo.isEqual(to: rhs.fileInfo)
+            && areEqualFilesInfo(lhs: lhs.filesInfo, rhs: rhs.filesInfo)
+            && lhs.state == rhs.state
+            && lhs.getDownloadProgress() == rhs.getDownloadProgress()
+            && lhs.getErrorType() == rhs.getErrorType()
+            && lhs.getErrorMessage() == rhs.getErrorMessage()
+            && lhs.getVisitorErrorMessage() == rhs.getVisitorErrorMessage()
+    }
+    
+    private static func areEqualFilesInfo(lhs: [FileInfo], rhs: [FileInfo]) -> Bool {
+        if lhs.count != rhs.count {
+            return false
+        }
+        for (index, item) in lhs.enumerated() {
+            if !item.isEqual(to: rhs[index]) {
+                return false
+            }
+        }
+        return true
+    }
 }
 
 /**
@@ -554,6 +670,25 @@ final class FileInfoImpl {
         
         return getAttachment(byFileUrlCreator: fileUrlCreator,
                              textDictionary: textDictionary)
+    }
+    
+    static func getErrorAttachment(byFileUrlCreator fileUrlCreator: FileUrlCreator, text: String, data: [String:Any?]) -> FileInfoImpl? {
+        guard let textData = text.data(using: .utf8) else { return nil }
+        let textDictionary = (try? JSONSerialization.jsonObject(with: textData) as? [String: Any?]) ?? [:]
+        let fileParameters = FileParametersItem(jsonDictionary: textDictionary)
+        
+        let filename = fileParameters.getFilename() ?? "Unknown filename"
+        let fileSize = fileParameters.getSize() ?? -1
+        
+        return FileInfoImpl(
+            urlString: nil,
+            size: fileSize,
+            filename: filename,
+            contentType: nil,
+            imageInfo: nil,
+            guid: nil,
+            fileUrlCreator: fileUrlCreator
+        )
     }
     
     static func getAttachments(byFileUrlCreator fileUrlCreator: FileUrlCreator,
@@ -656,6 +791,36 @@ extension FileInfoImpl: FileInfo {
         return URL(string: urlString)
     }
     
+    func isEqual(to fileInfo: FileInfo) -> Bool {
+        guard let fileInfo = fileInfo as? FileInfoImpl else {
+            return false
+        }
+        return (self == fileInfo)
+    }
+    
+}
+
+extension FileInfoImpl: Equatable {
+    
+    static func == (lhs: FileInfoImpl,
+                    rhs: FileInfoImpl) -> Bool {
+        return lhs.urlString == rhs.urlString
+            && lhs.size == rhs.size
+            && lhs.filename == rhs.filename
+            && lhs.contentType == rhs.contentType
+            && areEqualImageInfos(lhs: lhs.imageInfo, rhs: rhs.imageInfo)
+            && lhs.guid == rhs.guid
+    }
+    
+    private static func areEqualImageInfos(lhs: ImageInfo?, rhs: ImageInfo?) -> Bool {
+        if lhs == nil && rhs != nil || lhs != nil && rhs == nil {
+            return false
+        }
+        if lhs == nil && rhs == nil {
+            return true
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
 }
 
 /**
@@ -691,7 +856,7 @@ final class ImageInfoImpl: ImageInfo {
     // MARK: - Methods
     // MARK: ImageInfo protocol methods
     
-    func getThumbURL() -> URL {
+    func getThumbURL() -> URL? {
         guard let guid = guid,
               let currentURLString = fileUrlCreator?.createFileURL(byFilename: filename, guid: guid, isThumb: true),
               let thumbURL = URL(string: currentURLString) else {
@@ -709,6 +874,25 @@ final class ImageInfoImpl: ImageInfo {
         return width
     }
     
+    func isEqual(to imageInfo: ImageInfo) -> Bool {
+        guard let imageInfo = imageInfo as? ImageInfoImpl else {
+            return false
+        }
+        return (self == imageInfo)
+    }
+    
+}
+
+extension ImageInfoImpl: Equatable {
+    
+    static func == (lhs: ImageInfoImpl,
+                    rhs: ImageInfoImpl) -> Bool {
+        return lhs.thumbURLString == rhs.thumbURLString
+        && lhs.filename == rhs.filename
+        && lhs.guid == rhs.guid
+        && lhs.width == rhs.width
+        && lhs.height == rhs.height
+    }
 }
 
 /**
@@ -754,6 +938,51 @@ final class KeyboardImpl: Keyboard {
     func getResponse() -> KeyboardResponse? {
         return KeyboardResponseImpl(data: keyboardItem.getResponse())
     }
+    
+    func isEqual(to keyboard: Keyboard) -> Bool {
+        guard let keyboard = keyboard as? KeyboardImpl else {
+            return false
+        }
+        return self == keyboard
+    }
+}
+
+extension KeyboardImpl: Equatable {
+    static func == (lhs: KeyboardImpl, rhs: KeyboardImpl) -> Bool {
+        return lhs.getState() == rhs.getState()
+            && areEqualButtons(lhs: lhs.getButtons(), rhs: rhs.getButtons())
+            && areEqualResponses(lhs: lhs.getResponse(), rhs: rhs.getResponse())
+    }
+    
+    private static func areEqualButtons(lhs: [[KeyboardButton]], rhs: [[KeyboardButton]]) -> Bool {
+        if lhs.count != rhs.count {
+            return false
+        }
+        if lhs.isEmpty && rhs.isEmpty {
+            return true
+        }
+        for (index, array) in lhs.enumerated() {
+            if array.count != rhs[index].count {
+                return false
+            }
+            for (indexButton, button) in array.enumerated() {
+                if !button.isEqual(to: rhs[index][indexButton]) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+    
+    private static func areEqualResponses(lhs: KeyboardResponse?, rhs: KeyboardResponse?) -> Bool {
+        if lhs == nil && rhs != nil || lhs != nil && rhs == nil {
+            return false
+        }
+        if lhs == nil && rhs == nil {
+            return true
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
 }
 
 /**
@@ -781,6 +1010,13 @@ final class StickerImpl: Sticker {
     
     func getStickerId() -> Int {
         return stickerItem.getStickerId()
+    }
+    
+    func isEqual(to sticker: Sticker) -> Bool {
+        guard let sticker = sticker as? StickerImpl else {
+            return false
+        }
+        return self.getStickerId() == sticker.getStickerId()
     }
 }
 
@@ -815,6 +1051,42 @@ final class KeyboardButtonImpl: KeyboardButton {
     func getParams() -> Params? {
         return ParamsImpl(data: buttonItem.getParams())
     }
+    
+    func isEqual(to keyboardButton: KeyboardButton) -> Bool {
+        guard let keyboardButton = keyboardButton as? KeyboardButtonImpl else {
+            return false
+        }
+        return self == keyboardButton
+    }
+}
+
+extension KeyboardButtonImpl: Equatable {
+    static func == (lhs: KeyboardButtonImpl, rhs: KeyboardButtonImpl) -> Bool {
+        return lhs.getID() == rhs.getID()
+        && lhs.getText() == rhs.getText()
+        && areEqualConfigurations(lhs: lhs.getConfiguration(), rhs: rhs.getConfiguration())
+        && areEqualParams(lhs: lhs.getParams(), rhs: rhs.getParams())
+    }
+    
+    private static func areEqualConfigurations(lhs: Configuration?, rhs: Configuration?) -> Bool {
+        if lhs == nil && rhs != nil || lhs != nil && rhs == nil {
+            return false
+        }
+        if lhs == nil && rhs == nil {
+            return true
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
+    
+    private static func areEqualParams(lhs: Params?, rhs: Params?) -> Bool {
+        if lhs == nil && rhs != nil || lhs != nil && rhs == nil {
+            return false
+        }
+        if lhs == nil && rhs == nil {
+            return true
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
 }
 
 /**
@@ -839,6 +1111,20 @@ final class KeyboardResponseImpl: KeyboardResponse {
     
     func getMessageID() -> String {
         return keyboardResponseItem.getMessageId()
+    }
+    
+    func isEqual(to keyboardResponse: KeyboardResponse) -> Bool {
+        guard let keyboardResponse = keyboardResponse as? KeyboardResponseImpl else {
+            return false
+        }
+        return self == keyboardResponse
+    }
+}
+
+extension KeyboardResponseImpl: Equatable {
+    static func == (lhs: KeyboardResponseImpl, rhs: KeyboardResponseImpl) -> Bool {
+        return lhs.getButtonID() == rhs.getButtonID()
+        && lhs.getMessageID() == rhs.getMessageID()
     }
 }
 
@@ -873,6 +1159,20 @@ final class KeyboardRequestImpl: KeyboardRequest {
     func getMessageID() -> String {
         return keyboardRequestItem.getMessageId()
     }
+    
+    func isEqual(to keyboardRequest: KeyboardRequest) -> Bool {
+        guard let keyboardRequest = keyboardRequest as? KeyboardRequestImpl else {
+            return false
+        }
+        return self == keyboardRequest
+    }
+}
+
+extension KeyboardRequestImpl: Equatable {
+    static func == (lhs: KeyboardRequestImpl, rhs: KeyboardRequestImpl) -> Bool {
+        return lhs.getButton().isEqual(to: rhs.getButton())
+            && lhs.getMessageID() == rhs.getMessageID()
+    }
 }
 
 /**
@@ -891,22 +1191,41 @@ final class ConfigurationImpl: Configuration {
         }
     }
     
-    func isActive() -> Bool {
+    func isActive() -> Bool? {
         return configurationItem.isActive()
     }
     
-    func getButtonType() -> ButtonType {
+    func getButtonType() -> ButtonType? {
         return configurationItem.getButtonType()
     }
     
-    func getData() -> String {
+    func getData() -> String? {
         return configurationItem.getData()
     }
     
-    func getState() -> ButtonState {
+    func getState() -> ButtonState? {
         return configurationItem.getState()
     }
+    
+    func getHideAfter() -> Bool? {
+        return configurationItem.getHideAfter()
+    }
  
+    func isEqual(to configuration: Configuration) -> Bool {
+        guard let configuration = configuration as? ConfigurationImpl else {
+            return false
+        }
+        return self == configuration
+    }
+}
+
+extension ConfigurationImpl: Equatable {
+    static func == (lhs: ConfigurationImpl, rhs: ConfigurationImpl) -> Bool {
+        return lhs.isActive() == rhs.isActive()
+        && lhs.getButtonType() == rhs.getButtonType()
+        && lhs.getData() == rhs.getData()
+        && lhs.getState() == rhs.getState()
+    }
 }
 
 /**
@@ -933,8 +1252,22 @@ final class ParamsImpl: Params {
         return paramsItem?.getColor()
     }
  
+    func isEqual(to params: Params) -> Bool {
+        guard let params = params as? ParamsImpl else {
+            return false
+        }
+        return (self == params)
+    }
 }
 
+extension ParamsImpl: Equatable {
+    static func == (lhs: ParamsImpl,
+                    rhs: ParamsImpl) -> Bool {
+        return lhs.getType() == rhs.getType()
+            && lhs.getAction() == rhs.getAction()
+            && lhs.getColor() == rhs.getColor()
+    }
+}
 
 /**
  - seealso:
@@ -1050,6 +1383,13 @@ final class QuoteImpl: Quote {
         return state
     }
     
+    func isEqual(to quote: Quote) -> Bool {
+        guard let quote = quote as? QuoteImpl else {
+            return false
+        }
+        return (self == quote)
+    }
+    
     static private func convert(quoteState: QuoteItem.QuoteStateItem) -> QuoteState {
         switch quoteState {
         case .pending:
@@ -1059,5 +1399,57 @@ final class QuoteImpl: Quote {
         case .notFound:
             return .notFound
         }
+    }
+}
+
+extension QuoteImpl: Equatable {
+    
+    static func == (lhs: QuoteImpl,
+                    rhs: QuoteImpl) -> Bool {
+        return lhs.state == rhs.state
+            && lhs.authorID == rhs.authorID
+            && areEqualMessageAttachments(lhs: lhs.messageAttachment, rhs: rhs.messageAttachment)
+            && lhs.messageID == rhs.messageID
+            && lhs.messageType == rhs.messageType
+            && lhs.senderName == rhs.senderName
+            && lhs.text == rhs.text
+            && lhs.rawText == rhs.rawText
+            && lhs.timestamp == rhs.timestamp
+    }
+    
+    private static func areEqualMessageAttachments(lhs: FileInfo?, rhs: FileInfo?) -> Bool {
+        if lhs == nil && rhs != nil || lhs != nil && rhs == nil {
+            return false
+        }
+        if lhs == nil && rhs == nil {
+            return true
+        }
+        return lhs!.isEqual(to: rhs!)
+    }
+}
+
+class GroupImpl {
+    private let id: String
+    private let messageCount: Int
+    private let messageNumber: Int
+    
+    init(id: String, messageCount: Int, messageNumber: Int) {
+        self.id = id
+        self.messageCount = messageCount
+        self.messageNumber = messageNumber
+    }
+}
+
+extension GroupImpl: Group {
+    func getID() -> String {
+        return id
+    }
+    
+    func getMessageCount() -> Int {
+        return messageCount
+    }
+    
+    func getMessageNumber() -> Int {
+        return messageNumber
     }
 }

@@ -11,6 +11,7 @@ enum RoxchatInternalError: String, Error {
     case domainNotFromWhitelist = "domain-not-from-whitelist"
     case fileSizeExceeded = "max_file_size_exceeded"
     case fileSizeTooSmall = "file_size_too_small"
+    case maliciousFileDetected = "malicious_file_detected"
     case fileTypeNotAllowed = "not_allowed_file_type"
     case notAllowedMimeType = "not_allowed_mime_type"
     case noPreviousChats = "no_previous_chats"
@@ -27,6 +28,10 @@ enum RoxchatInternalError: String, Error {
     case visitorBanned = "visitor_banned"
     case wrongArgumentValue = "wrong-argument-value"
     case wrongProvidedVisitorFieldsHashValue = "wrong-provided-visitor-hash-value"
+    case unknownMetod = "unknown-method"
+    case noPartnerOption = "no-partner-option"
+    case argumentMissing = "argument-missing"
+    case wrongInit = "wrong-init"
     
     // Data errors
     // Quoting message errors
@@ -52,10 +57,21 @@ enum RoxchatInternalError: String, Error {
     // edit
     case wrongMessageKind = "wrong_message_kind"
     
-    // Rate operator errors
+    // Rate operator vs resolutionSurvey errors
     case noChat = "no-chat"
     case operatorNotInChat = "operator-not-in-chat"
+    case rateDisabled = "rate-disabled"
+    
+    // Rate operator errors
     case noteIsTooLong = "note-is-too-long"
+    case rateValueIncorrect = "rate-value-incorrect"
+    case wrongOperatorId = "wrong-operator-id"
+    
+    // Survey operator errors
+    case resolutionSurveyValueIncorrect = "resolution-survey-value-incorrect"
+    case rateFormMismatch = "rate-form-mismatch"
+    case visitorSegmentMismatch = "visitor-segment-mismatch"
+    case ratedEntityMismatch = "rated-entity-mismatch"
     
     // Keyboard response errors
     case buttonIdNotSet = "button-id-not-set"

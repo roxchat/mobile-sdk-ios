@@ -8,7 +8,7 @@ import Foundation
  - seealso:
  `set(fatalErrorHandler:)` method of `SessionBuilder` class.
  */
-public protocol FatalErrorHandler: class {
+public protocol FatalErrorHandler: AnyObject {
     
     /**
      This method is to be called when Roxchat service error is received.

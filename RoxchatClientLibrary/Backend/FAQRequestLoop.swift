@@ -10,11 +10,14 @@ class FAQRequestLoop: AbstractRequestLoop {
     private let completionFAQHandlerExecutor: ExecIfNotDestroyedFAQHandlerExecutor
     var operationQueue: OperationQueue?
     
-    
     // MARK: - Initialization
-    init(completionHandlerExecutor: ExecIfNotDestroyedFAQHandlerExecutor) {
+    init(completionHandlerExecutor: ExecIfNotDestroyedFAQHandlerExecutor,
+         baseURL: String) {
         self.completionFAQHandlerExecutor = completionHandlerExecutor
-        super.init(completionHandlerExecutor: nil, internalErrorListener: nil)
+        super.init(completionHandlerExecutor: nil,
+                   internalErrorListener: nil,
+                   requestHeader: nil,
+                   baseURL: baseURL)
     }
     
     // MARK: - Methods

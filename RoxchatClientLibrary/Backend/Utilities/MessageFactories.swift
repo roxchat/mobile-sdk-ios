@@ -14,6 +14,9 @@ class MessageMapper {
     // MARK: - Properties
     private let serverURLString: String
     private var fileUrlCreator: FileUrlCreator?
+    private var accountConfig: AccountConfigItem?
+    private var roxchatClient: RoxchatClient?
+    private var location: String?
     
     // MARK: - Initialization
     init(withServerURLString serverURLString: String) {
@@ -107,6 +110,9 @@ class MessageMapper {
                     case .externalChecks:
                         state = .externalChecks
                         break
+                    case .upload:
+                        state = .upload
+                        break
                     default:
                         state = .ready
                     }
@@ -115,7 +121,8 @@ class MessageMapper {
                                                           filesInfo: attachments,
                                                           state: state,
                                                           errorType: file?.getErrorType(),
-                                                          errorMessage: file?.getErrorMessage())
+                                                          errorMessage: file?.getErrorMessage(),
+                                                          visitorErrorMessage: file?.getVisitorErrorMessage())
                     )
                 } else {
                     if let rawData = messageItem.getRawData(),
@@ -127,6 +134,9 @@ class MessageMapper {
                             break
                         case .externalChecks:
                             state = .externalChecks
+                            break
+                        case .upload:
+                            state = .upload
                             break
                         default:
                             state = .ready
@@ -145,7 +155,8 @@ class MessageMapper {
                                                               state: state,
                                                               downloadProgress: file.getDownloadProgress(),
                                                               errorType: file.getErrorType(),
-                                                              errorMessage: file.getErrorMessage()))
+                                                              errorMessage: file.getErrorMessage(),
+                                                              visitorErrorMessage: file.getVisitorErrorMessage()))
                     }
                 }
             }
@@ -209,6 +220,15 @@ class MessageMapper {
             return nil
         }
         
+        let group: Group?
+        if let groupItem = messageItem.getGroup() {
+            group = GroupImpl(id: groupItem.getID(),
+                              messageCount: groupItem.getMessageCount(),
+                              messageNumber: groupItem.getMessageNumber())
+        } else {
+            group = nil
+        }
+        
         return MessageImpl(serverURLString: serverURLString,
                            clientSideID: clientSideID,
                            serverSideID: messageItem.getServerSideID(),
@@ -228,16 +248,22 @@ class MessageMapper {
                            internalID: messageItem.getServerSideID(),
                            rawText: rawText,
                            read: messageItem.getRead() ?? true,
-                           messageCanBeEdited: messageItem.getCanBeEdited(),
-                           messageCanBeReplied: messageItem.getCanBeReplied(),
+                           messageCanBeEdited: messageItem.getCanBeEdited() && (accountConfig?.getVisitorMessageEditing() ?? true),
+                           messageCanBeReplied: messageItem.getCanBeReplied() && (accountConfig?.getWebAndMobileQuoting() ?? true),
                            messageIsEdited: messageItem.getIsEdited(),
                            visitorReactionInfo: messageItem.getReaction(),
                            visitorCanReact: messageItem.getCanVisitorReact(),
-                           visitorChangeReaction: messageItem.getCanVisitorChangeReaction())
+                           visitorChangeReaction: messageItem.getCanVisitorChangeReaction(),
+                           group: group,
+                           deleted: messageItem.isDeleted())
     }
     
     func set(fileUrlCreator: FileUrlCreator) {
         self.fileUrlCreator = fileUrlCreator
+    }
+    
+    func set(accountConfig: AccountConfigItem?) {
+        self.accountConfig = accountConfig
     }
     
     func mapAll(messages: [MessageItem]) -> [MessageImpl] {
@@ -324,12 +350,12 @@ final class SendingFactory {
     }
 
     
-    func createFileMessageToSendWith(id: String, data: MessageData? = nil) -> MessageToSend {
+    func createFileMessageToSendWith(id: String, data: MessageData? = nil, filenameWithType: String) -> MessageToSend {
         return MessageToSend(serverURLString: serverURLString,
                              clientSideID: id,
                              senderName: "",
                              type: .fileFromVisitor,
-                             text: "",
+                             text: filenameWithType,
                              timeInMicrosecond: InternalUtils.getCurrentTimeInMicrosecond(),
                              data: data)
     }
@@ -342,6 +368,16 @@ final class SendingFactory {
                              text: "",
                              timeInMicrosecond: InternalUtils.getCurrentTimeInMicrosecond(),
                              sticker: StickerImpl(stickerId: stickerId))
+    }
+    
+    func createDeleteMessageToSendWith(id: String) -> MessageToSend {
+        return MessageToSend(serverURLString: serverURLString,
+                             clientSideID: id,
+                             senderName: "",
+                             type: .visitorMessage,
+                             text: "",
+                             timeInMicrosecond: InternalUtils.getCurrentTimeInMicrosecond(),
+                             deleted: true)
     }
     
 }

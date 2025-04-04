@@ -175,6 +175,18 @@ public protocol Message {
      True if visitor can change react.
      */
     func canVisitorChangeReaction() -> Bool
+    
+    /**
+     - returns:
+     Group if message is part of group.
+     */
+    func getGroup() -> Group?
+    
+    /**
+     - returns:
+     True if visitor delete message.
+     */
+    func isDeleted() -> Bool?
 }
 
 /**
@@ -240,6 +252,14 @@ public protocol MessageAttachment {
      A message with the reason for the error during loading.
      */
     func getErrorMessage() -> String?
+    
+    /**
+     - returns:
+     A message with the reason for the error during loading verificator.
+     */
+    func getVisitorErrorMessage() -> String?
+    
+    func isEqual(to messageAttachment: MessageAttachment) -> Bool
     
 }
 
@@ -320,6 +340,8 @@ public protocol FileInfo {
      */
     func getURL() -> URL?
     
+    func isEqual(to fileInfo: FileInfo) -> Bool
+    
 }
 
 /**
@@ -350,7 +372,7 @@ public protocol ImageInfo {
      - returns:
      URL of reduced image.
      */
-    func getThumbURL() -> URL
+    func getThumbURL() -> URL?
     
     /**
      - returns:
@@ -363,6 +385,8 @@ public protocol ImageInfo {
      Width of an image in pixels.
      */
     func getWidth() -> Int?
+    
+    func isEqual(to imageInfo: ImageInfo) -> Bool
 }
 
 /**
@@ -389,6 +413,8 @@ public protocol Keyboard {
      Keyboard response.
      */
     func getResponse() -> KeyboardResponse?
+    
+    func isEqual(to keyboard: Keyboard) -> Bool
 }
 
 /**
@@ -441,6 +467,8 @@ public protocol KeyboardResponse {
      ID of a message.
      */
     func getMessageID() -> String
+    
+    func isEqual(to keyboardResponse: KeyboardResponse) -> Bool
 }
 
 /**
@@ -473,6 +501,8 @@ public protocol KeyboardButton {
      Params of a button.
      */
     func getParams() -> Params?
+    
+    func isEqual(to keyboardButton: KeyboardButton) -> Bool
 }
 
 /**
@@ -484,25 +514,33 @@ public protocol Configuration {
      - returns:
      Is button active or not.
      */
-    func isActive() -> Bool
+    func isActive() -> Bool?
     
     /**
      - returns:
      Button type.
      */
-    func getButtonType() -> ButtonType
+    func getButtonType() -> ButtonType?
     
     /**
      - returns:
      Data a button.
      */
-    func getData() -> String
+    func getData() -> String?
     
     /**
      - returns:
      Button state.
      */
-    func getState() -> ButtonState
+    func getState() -> ButtonState?
+    
+    /**
+    - returns:
+    Hide button after response.
+    */
+    func getHideAfter() -> Bool?
+    
+    func isEqual(to configuration: Configuration) -> Bool
 }
 
 /**
@@ -521,6 +559,8 @@ public protocol Params {
     /**
      */
     func getColor() -> String?
+    
+    func isEqual(to params: Params) -> Bool
 }
 
 
@@ -542,6 +582,8 @@ public protocol KeyboardRequest {
      Request message ID.
      */
     func getMessageID() -> String
+    
+    func isEqual(to keyboardRequest: KeyboardRequest) -> Bool
 }
 
 /**
@@ -597,6 +639,8 @@ public protocol Quote {
      Quote type.
      */
     func getState() -> QuoteState
+    
+    func isEqual(to quote: Quote) -> Bool
 }
 
 /**
@@ -613,6 +657,8 @@ public protocol Sticker {
      Sticker ID.
      */
     func getStickerId() -> Int
+    
+    func isEqual(to sticker: Sticker) -> Bool
 }
 
 /**
@@ -673,6 +719,11 @@ public enum FileState {
      The file is checked by server.
      */
     case externalChecks
+    
+    /**
+     The file is checked by verificator.
+     */
+    case externalVerification
 }
 
 /**
@@ -794,7 +845,7 @@ public enum MessageType {
 /**
  Until a message is sent to the server, is received by the server and is spreaded among clients, message can be seen as "being send"; at the same time `Message.getSendStatus()` will return `sending`. In other cases - `sent`.
  */
-public enum MessageSendStatus {
+public enum MessageSendStatus: String {
     
     /**
      A message is being sent.
@@ -838,4 +889,25 @@ public enum ParamsButtonType {
     
     case action
     
+}
+
+// MARK: -
+/**
+ Information about group of messages.
+ */
+public protocol Group {
+    /**
+     Group id.
+     */
+    func getID() -> String
+    
+    /**
+     Count of messages in group.
+     */
+    func getMessageCount() -> Int
+    
+    /**
+     Message number in group.
+     */
+    func getMessageNumber() -> Int
 }

@@ -30,14 +30,11 @@ class FAQActions {
     }
     
     // MARK: - Properties
-    private let baseURL: String
     private let faqRequestLoop: FAQRequestLoop
     private static let deviceID = ClientSideID.generateClientSideID()
     
     // MARK: - Initialization
-    init(baseURL: String,
-         faqRequestLoop: FAQRequestLoop) {
-        self.baseURL = baseURL
+    init(faqRequestLoop: FAQRequestLoop) {
         self.faqRequestLoop = faqRequestLoop
     }
     
@@ -48,7 +45,7 @@ class FAQActions {
         let dataToPost = [Parameter.itemId.rawValue: itemId,
                           Parameter.userId.rawValue: FAQActions.deviceID] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.item.rawValue
+        let urlString = faqRequestLoop.baseURL + ServerPathSuffix.item.rawValue
         
         faqRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
                                                      primaryData: dataToPost,
@@ -61,7 +58,7 @@ class FAQActions {
         let dataToPost = [Parameter.categoryId.rawValue: categoryId,
                           Parameter.userId.rawValue: FAQActions.deviceID] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.category.rawValue
+        let urlString = faqRequestLoop.baseURL + ServerPathSuffix.category.rawValue
         
         faqRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
                                                      primaryData: dataToPost,
@@ -78,7 +75,7 @@ class FAQActions {
                           Parameter.language.rawValue: language,
                           Parameter.departmentKey.rawValue: departmentKey] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.categories.rawValue
+        let urlString = faqRequestLoop.baseURL + ServerPathSuffix.categories.rawValue
         
         faqRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
                                                      primaryData: dataToPost,
@@ -90,7 +87,7 @@ class FAQActions {
                       completion: @escaping (_ faqStructure: Data?) throws -> ()) {
         let dataToPost = [Parameter.categoryId.rawValue: categoryId] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.structure.rawValue
+        let urlString = faqRequestLoop.baseURL + ServerPathSuffix.structure.rawValue
         
         faqRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
                                                      primaryData: dataToPost,
@@ -106,7 +103,7 @@ class FAQActions {
                           Parameter.query.rawValue: query,
                           Parameter.limit.rawValue: limit] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.search.rawValue
+        let urlString = faqRequestLoop.baseURL + ServerPathSuffix.search.rawValue
         
         faqRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .get,
                                                      primaryData: dataToPost,
@@ -119,7 +116,7 @@ class FAQActions {
         let dataToPost = [Parameter.itemId.rawValue: itemId,
                           Parameter.userId.rawValue: FAQActions.deviceID] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.like.rawValue
+        let urlString = faqRequestLoop.baseURL + ServerPathSuffix.like.rawValue
         
         faqRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
                                                      primaryData: dataToPost,
@@ -132,7 +129,7 @@ class FAQActions {
         let dataToPost = [Parameter.itemId.rawValue: itemId,
                           Parameter.userId.rawValue: FAQActions.deviceID] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.dislike.rawValue
+        let urlString = faqRequestLoop.baseURL + ServerPathSuffix.dislike.rawValue
         
         faqRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
                                                      primaryData: dataToPost,
@@ -152,7 +149,7 @@ class FAQActions {
         let dataToPost = [Parameter.itemId.rawValue: itemId,
                           Parameter.open.rawValue: source] as [String: Any]
         
-        let urlString = baseURL + ServerPathSuffix.track.rawValue
+        let urlString = faqRequestLoop.baseURL + ServerPathSuffix.track.rawValue
         
         faqRequestLoop.enqueue(request: RoxchatRequest(httpMethod: .post,
                                                      primaryData: dataToPost,

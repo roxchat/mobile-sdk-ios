@@ -15,7 +15,8 @@ final class MessageToSend: MessageImpl {
          timeInMicrosecond: Int64,
          data: MessageData? = nil,
          quote: Quote? = nil,
-         sticker: Sticker? = nil) {
+         sticker: Sticker? = nil,
+         deleted: Bool? = false) {
         super.init(serverURLString: serverURLString,
                    clientSideID: clientSideID,
                    serverSideID: nil,
@@ -41,7 +42,9 @@ final class MessageToSend: MessageImpl {
                    messageIsEdited: false,
                    visitorReactionInfo: nil,
                    visitorCanReact: false,
-                   visitorChangeReaction: false)
+                   visitorChangeReaction: false,
+                   group: nil,
+                   deleted: deleted)
     }
     
 }

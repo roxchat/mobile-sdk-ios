@@ -94,6 +94,7 @@ public final class SessionBuilder  {
     private weak var fatalErrorHandler: FatalErrorHandler?
     private var localHistoryStoragingEnabled = true
     private var location: String?
+    private var mobileChatInstance: String?
     private var multivisitorSection = ""
     private weak var notFatalErrorHandler: NotFatalErrorHandler?
     private var pageTitle: String?
@@ -108,6 +109,7 @@ public final class SessionBuilder  {
     private weak var roxchatAlert: RoxchatAlert?
     private var prechat: String?
     private var onlineStatusRequestFrequencyInMillis: Int64?
+    private var requestHeader: [String: String]?
 
     // MARK: - Methods
 
@@ -138,6 +140,23 @@ public final class SessionBuilder  {
      */
     public func set(location: String) -> SessionBuilder {
         self.location = location
+
+        return self
+    }
+    
+    /**
+     Mobile chat instance.
+     Use this parameter for set new session inside mobile application.
+     
+     Default value is `default`.
+     If you don't set this parameter and try to create new session inside mobile application you will get same session.
+     - parameter location:
+     Mobile location name.
+     - returns:
+     `SessionBuilder` object with location set.
+     */
+    public func set(mobileChatInstance: String) -> SessionBuilder {
+        self.mobileChatInstance = mobileChatInstance
 
         return self
     }
@@ -356,6 +375,20 @@ public final class SessionBuilder  {
         
         return self
     }
+    
+    /**
+     Adds header to network requests.
+     - parameter requestHeader:
+     Request header.
+     - returns:
+     `SessionBuilder` object with requestLocationFrequencyInMs parameter set.
+     */
+    public func set(requestHeader: [String: String]) -> SessionBuilder {
+        self.requestHeader = requestHeader
+        
+        return self
+    }
+
 
     /**
      Method to pass RoxchatLogger object.
@@ -474,25 +507,27 @@ public final class SessionBuilder  {
         }
 
         return RoxchatSessionImpl.newInstanceWith(accountName: accountName,
-                                                location: location,
-                                                appVersion: appVersion,
-                                                visitorFields: visitorFields,
-                                                providedAuthorizationTokenStateListener: providedAuthorizationTokenStateListener,
-                                                providedAuthorizationToken: providedAuthorizationToken,
-                                                pageTitle: pageTitle,
-                                                fatalErrorHandler: fatalErrorHandler,
-                                                notFatalErrorHandler: notFatalErrorHandler,
-                                                deviceToken: deviceToken,
-                                                remoteNotificationSystem: remoteNotificationSystem,
-                                                isLocalHistoryStoragingEnabled: localHistoryStoragingEnabled,
-                                                isVisitorDataClearingEnabled: visitorDataClearingEnabled,
-                                                roxchatLogger: roxchatLogger,
-                                                verbosityLevel: roxchatLoggerVerbosityLevel,
-                                                availableLogTypes: availableLogTypes,
-                                                roxchatAlert: roxchatAlert,
-                                                prechat: prechat,
-                                                multivisitorSection: multivisitorSection,
-                                                onlineStatusRequestFrequencyInMillis: onlineStatusRequestFrequencyInMillis) as RoxchatSession
+                                                  location: location,
+                                                  mobileChatInstance: mobileChatInstance,
+                                                  appVersion: appVersion,
+                                                  visitorFields: visitorFields,
+                                                  providedAuthorizationTokenStateListener: providedAuthorizationTokenStateListener,
+                                                  providedAuthorizationToken: providedAuthorizationToken,
+                                                  pageTitle: pageTitle,
+                                                  fatalErrorHandler: fatalErrorHandler,
+                                                  notFatalErrorHandler: notFatalErrorHandler,
+                                                  deviceToken: deviceToken,
+                                                  remoteNotificationSystem: remoteNotificationSystem,
+                                                  isLocalHistoryStoragingEnabled: localHistoryStoragingEnabled,
+                                                  isVisitorDataClearingEnabled: visitorDataClearingEnabled,
+                                                  roxchatLogger: roxchatLogger,
+                                                  verbosityLevel: roxchatLoggerVerbosityLevel,
+                                                  availableLogTypes: availableLogTypes,
+                                                  roxchatAlert: roxchatAlert,
+                                                  prechat: prechat,
+                                                  multivisitorSection: multivisitorSection,
+                                                  onlineStatusRequestFrequencyInMillis: onlineStatusRequestFrequencyInMillis,
+                                                  requestHeader: requestHeader) as RoxchatSession
     }
     
     /**

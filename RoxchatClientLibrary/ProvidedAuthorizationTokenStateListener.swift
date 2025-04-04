@@ -7,7 +7,7 @@ import Foundation
  - attention:
  This mechanism can't be used as is. It requires that client server to support this mechanism.
  */
-public protocol ProvidedAuthorizationTokenStateListener: class {
+public protocol ProvidedAuthorizationTokenStateListener: AnyObject {
     
     /**
      Method is called in two cases:

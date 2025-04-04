@@ -36,6 +36,11 @@ final class DeltaCallback {
         self.historyPoller = historyPoller
     }
     
+    func set(accountConfig: AccountConfigItem?) {
+        self.currentChatMessageMapper.set(accountConfig: accountConfig)
+        self.historyMessageMapper.set(accountConfig: accountConfig)
+    }
+    
     func process(deltaList: [DeltaItem]) {
         for delta in deltaList {
             guard let deltaType = delta.getDeltaType() else {
@@ -85,6 +90,9 @@ final class DeltaCallback {
             case .chatMessageRead:
                 handleMessageRead(delta: delta)
                 
+            case .chatId:
+                handleChatId(delta: delta)
+                
             default:
                 // Not supported delta type.
                 
@@ -107,6 +115,9 @@ final class DeltaCallback {
         }
         
         currentChat = fullUpdate.getChat()
+        for message in currentChat?.getMessages() ?? [] {
+            RoxchatInternalLogger.shared.log(entry: "Delta chat: \'\(message.getText() ?? "")\'", verbosityLevel: .debug, logType: .messageHistory)
+        }
         
         var isCurrentChatEmpty = true
         if let currentChat = currentChat,
@@ -170,6 +181,9 @@ final class DeltaCallback {
             break
         }
         for message in currentChat?.getMessages() ?? [] {
+            if let messageItem = historyMessageMapper.map(message: message) {
+                historyPoller?.insertMessageInDB(message: messageItem)
+            }
             RoxchatInternalLogger.shared.log(entry: "Delta chat: \'\(message.getText() ?? "")\'", verbosityLevel: .debug, logType: .messageHistory)
         }
         messageStream?.changingChatStateOf(chat: currentChat)
@@ -205,6 +219,7 @@ final class DeltaCallback {
             
             let messageItem = MessageItem(jsonDictionary: deltaData)
             let message = currentChatMessageMapper.map(message: messageItem)
+            let historyMessage = historyMessageMapper.map(message: messageItem)
             RoxchatInternalLogger.shared.log(entry: "Delta message: \'\(message?.getText() ?? "")\'", verbosityLevel: .debug, logType: .messageHistory)
             if deltaEvent == .add {
                 var isNewMessage = false
@@ -217,6 +232,9 @@ final class DeltaCallback {
                 if isNewMessage,
                     let message = message {
                     messageHolder?.receive(newMessage: message)
+                    if let historyMessage = historyMessage {
+                        historyPoller?.insertMessageInDB(message: historyMessage)
+                    }
                 }
                 
                 
@@ -235,6 +253,9 @@ final class DeltaCallback {
                 
                 if let message = message {
                     messageHolder?.changed(message: message)
+                    if let historyMessage = historyMessage {
+                        historyPoller?.insertMessageInDB(message: historyMessage)
+                    }
                 }
             }
         }
@@ -426,5 +447,14 @@ final class DeltaCallback {
     private func handleClosedChat() {
         currentChat?.set(operator: nil)
         currentChat?.set(operatorTyping: false)
+    }
+    
+    private func handleChatId(delta: DeltaItem) {
+        guard delta.getEvent() == .update,
+            let id = delta.getData() as? Int else {
+                return
+        }
+        
+        currentChat?.set(id: id)
     }
 }

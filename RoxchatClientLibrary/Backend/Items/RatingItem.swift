@@ -10,12 +10,14 @@ struct RatingItem {
     // Raw values equal to field names received in responses from server.
     private enum JSONField: String {
         case operatorID = "operatorId"
-        case rating = "rating"
+        case rating
+        case answer
     }
     
     // MARK: - Properties
     private var operatorID: String
-    private var rating: Int
+    private var rating: Int?
+    private var answer: Int?
     
     // MARK: - Initialization
     init?(jsonDictionary: [String : Any?]) {
@@ -25,7 +27,8 @@ struct RatingItem {
         }
         
         self.operatorID = String(operatorID)
-        self.rating = rating
+        self.rating = jsonDictionary[JSONField.rating.rawValue] as? Int
+        self.answer = jsonDictionary[JSONField.answer.rawValue] as? Int
     }
     
     // MARK: - Methods
@@ -34,8 +37,12 @@ struct RatingItem {
         return operatorID
     }
     
-    func getRating() -> Int {
+    func getRating() -> Int? {
         return rating
+    }
+    
+    func getAnswer() -> Int? {
+        return answer
     }
 
     static func ==(rhs: RatingItem, lhs: RatingItem) -> Bool {
